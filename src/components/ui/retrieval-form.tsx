@@ -19,7 +19,7 @@ export function RetrievalForm() {
     const [queryType, setQueryType] = useState("interactive");
 
     return (
-        <aside className="w-full max-w-sm p-6 bg-sidebar border-r overflow-y-auto custom-scrollbar">
+        <aside className="w-86 min-w-0 p-6 bg-sidebar border-r overflow-y-auto custom-scrollbar">
             <h1 className="text-2xl font-bold mb-4 bg-gradient-to-r from-[#9EA3F7] to-[#4AFCED] bg-clip-text text-transparent">
                 Information Retrieval
             </h1>

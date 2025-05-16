@@ -14,7 +14,9 @@ export default function DocumentPreview({
     return (
         <div className="flex flex-row gap-20 mb-6 w-full">
             <div className="flex flex-grow flex-col min-w-0">
-                <h3 className="text-lg font-medium text-primary">{title}</h3>
+                <h3 className="truncate overflow-hidden whitespace-nowrap text-lg font-medium text-primary">
+                    {title}
+                </h3>
                 <p className="text-sm text-muted-foreground">by {author}</p>
                 <p className="truncate overflow-hidden whitespace-nowrap text-sm mt-1">
                     {content}
