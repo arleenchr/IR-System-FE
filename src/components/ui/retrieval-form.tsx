@@ -111,12 +111,75 @@ export function RetrievalForm() {
 
             <Separator />
 
+            {/* Document Weighting Methods */}
             {/* TF Methods */}
             <div className="flex flex-col gap-2 my-4">
+                <Label className="text-base">Document Weighting Method</Label>
                 <div className="flex flex-row gap-2 content-center">
                     <Label
                         htmlFor="tf-method"
-                        className="text-base whitespace-nowrap"
+                        className="text-sm whitespace-nowrap"
+                    >
+                        TF Method
+                    </Label>
+                    <Select defaultValue="logarithmic">
+                        <SelectTrigger
+                            id="tf-method"
+                            className="w-full flex-grow bg-sidebar text-foreground cursor-pointer"
+                        >
+                            <SelectValue placeholder="Select a method" />
+                        </SelectTrigger>
+                        <SelectContent className="bg-sidebar text-white">
+                            {["logarithmic", "binary", "augmented", "raw"].map(
+                                (method) => (
+                                    <SelectItem
+                                        key={method}
+                                        value={method}
+                                        className="cursor-pointer"
+                                    >
+                                        {method}
+                                    </SelectItem>
+                                )
+                            )}
+                        </SelectContent>
+                    </Select>
+                </div>
+            </div>
+
+            {/* IDF & Normalization */}
+            <div className="space-y-2 mb-4">
+                <RadioGroup defaultValue="TF only">
+                    {[
+                        "TF only",
+                        "IDF only",
+                        "TF x IDF",
+                        "TF x IDF x cosine normalization",
+                    ].map((method) => (
+                        <div
+                            key={method}
+                            className="flex items-center space-x-2"
+                        >
+                            <RadioGroupItem
+                                value={method}
+                                id={method}
+                                className="cursor-pointer"
+                            />
+                            <Label htmlFor={method}>{method}</Label>
+                        </div>
+                    ))}
+                </RadioGroup>
+            </div>
+
+            <Separator />
+
+            {/* Query Weighting Methods */}
+            {/* TF Methods */}
+            <div className="flex flex-col gap-2 my-4">
+                <Label className="text-base">Query Weighting Method</Label>
+                <div className="flex flex-row gap-2 content-center">
+                    <Label
+                        htmlFor="tf-method"
+                        className="text-sm whitespace-nowrap"
                     >
                         TF Method
                     </Label>
@@ -169,7 +232,7 @@ export function RetrievalForm() {
             </div>
 
             {/* Retrieve Button */}
-            <Button className="w-full mt-4 text-black font-semibold bg-gradient-to-r from-[#9EA3F7] to-[#4AFCED] cursor-pointer">
+            <Button className="w-full mt-2 text-black font-semibold bg-gradient-to-r from-[#9EA3F7] to-[#4AFCED] cursor-pointer">
                 Retrieve
             </Button>
         </aside>
