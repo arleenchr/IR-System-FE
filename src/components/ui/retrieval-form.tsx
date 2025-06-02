@@ -67,7 +67,7 @@ export function RetrievalForm({
 
             const results: ResultType = {};
 
-            const weighting_method = {
+            const doc_weighting_method = {
                 tf_raw: docTF && docTFMethod === "raw",
                 tf_log: docTF && docTFMethod === "logarithmic",
                 tf_binary: docTF && docTFMethod === "binary",
@@ -86,8 +86,94 @@ export function RetrievalForm({
                         threshold: queryExpansionThreshold,
                         limit: queryExpansionLimit,
                     })
-                    .then((res) => (results.expansion = res.data))
+                    .then((res) => {
+                        results.expansion = res.data;
+
+                        const expandedTerms: string[] = res.data.expanded_terms || [];
+                        const expandedQuery = expandedTerms.join(" ");
+
+                        if (queryType == "interactive") {
+                            promises.push(
+                                api
+                                    .post("/retrieval/retrieve", {
+                                        relevant_doc: [
+                                            "29",
+                                            "68",
+                                            "197",
+                                            "213",
+                                            "214",
+                                            "309",
+                                            "319",
+                                            "324",
+                                            "429",
+                                            "499",
+                                            "636",
+                                            "669",
+                                            "670",
+                                            "674",
+                                            "690",
+                                            "692",
+                                            "695",
+                                            "700",
+                                            "704",
+                                            "709",
+                                            "720",
+                                            "731",
+                                            "733",
+                                            "738",
+                                            "740",
+                                            "1136",
+                                        ],
+                                        query: expandedQuery,
+                                        weighting_method: doc_weighting_method,
+                                    })
+                                    .then(
+                                        (res) => (results.retrievalExpanded = res.data)
+                                    )
+                            );
+                        }
+                    })
             );
+
+            // Retrieval (original query)
+            if (queryType == "interactive") {
+                promises.push(
+                    api
+                        .post("/retrieval/retrieve", {
+                            relevant_doc: [
+                                "29",
+                                "68",
+                                "197",
+                                "213",
+                                "214",
+                                "309",
+                                "319",
+                                "324",
+                                "429",
+                                "499",
+                                "636",
+                                "669",
+                                "670",
+                                "674",
+                                "690",
+                                "692",
+                                "695",
+                                "700",
+                                "704",
+                                "709",
+                                "720",
+                                "731",
+                                "733",
+                                "738",
+                                "740",
+                                "1136",
+                            ],
+                            query: queryText,
+                            weighting_method: doc_weighting_method,
+                        })
+                        .then((res) => (results.retrievalOriginal = res.data))
+                );
+            }
 
             // Documents List
             promises.push(

@@ -1,11 +1,13 @@
 export default function DocumentPreview({
     i,
+    rank,
     title,
     author,
     content,
     similarity,
 }: {
-    i: number;
+    i: string;
+    rank: number;
     title: string;
     author: string;
     content: string;
@@ -25,7 +27,7 @@ export default function DocumentPreview({
             <div className="flex flex-col flex-shrink-0 items-center text-muted-foreground pt-1">
                 <div className="flex-grow border rounded-lg w-full text-center content-center ">
                     <p className="text-xs">Rank</p>
-                    <p className="text-base font-bold">#{i}</p>
+                    <p className="text-base font-bold">#{rank}</p>
                 </div>
                 <p className="text-xs">
                     Similarity: <span className="font-bold">{similarity}</span>

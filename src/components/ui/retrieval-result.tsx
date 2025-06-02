@@ -51,6 +51,9 @@ export function RetrievalResult({ result }: { result: any }) {
     const expandedTerms = expansion.expanded_terms;
     const expansionTerms = expansion.expansion_terms;
 
+    const retrievalResultOriginal = result.retrievalOriginal;
+    const retrievalResultExpanded = result.retrievalExpanded;
+
     const documentsList = result.documents.documents;
     const invertedFile = result.invertedFile.inverted_file;
 
@@ -131,58 +134,71 @@ export function RetrievalResult({ result }: { result: any }) {
                 {/* Tab: Original */}
                 <TabsContent value="original" className="mx-2">
                     <p className="text-sm text-[#8b8b8b] mb-4">
-                        5 documents retrieved • AP score: <strong>0.73</strong>
+                        <strong>{retrievalResultOriginal.total_retrieved}</strong>{" "}
+                        documents retrieved • AP score:{" "}
+                        <strong>{retrievalResultOriginal.average_precision}</strong>
                     </p>
 
                     <div className="space-y-4">
-                        {[...Array(5)].map((_, i) => (
-                            <div>
-                                <DocumentPreview
-                                    key={i}
-                                    i={i + 1}
-                                    title={`Document Title ${
-                                        i + 1
-                                    } Lorem Ipsum Dolor Sit Amet Lorem Ipsum Dolor Sit Amet Long Title`}
-                                    author={`Author ${i + 1}`}
-                                    content={`This is a preview of the document content. It will truncate to a single line with ellipsis if it's too long lorem ipsum dolor sit amet lorem ipsum`}
-                                    similarity={0.95}
-                                />
-                                <Separator />
-                            </div>
-                        ))}
+                        {retrievalResultOriginal.ranked_documents.map(
+                            (id: string, index: number) => (
+                                <div>
+                                    <DocumentPreview
+                                        key={id}
+                                        i={id}
+                                        rank={index + 1}
+                                        title={`Document ${id}`}
+                                        author={`Author ${id}`}
+                                        content={`This is a preview of the document content. It will truncate to a single line with ellipsis if it's too long lorem ipsum dolor sit amet lorem ipsum`}
+                                        similarity={0.95}
+                                    />
+                                    <Separator />
+                                </div>
+                            )
+                        )}
                     </div>
                 </TabsContent>
 
                 {/* Tab: Expanded */}
                 <TabsContent value="expanded" className="mx-2">
                     <p className="text-sm text-[#8b8b8b] mb-4">
-                        5 documents retrieved • AP score: <strong>0.73</strong>
+                        <strong>{retrievalResultExpanded.total_retrieved}</strong>{" "}
+                        documents retrieved • AP score:{" "}
+                        <strong>{retrievalResultExpanded.average_precision}</strong>
                     </p>
 
                     <div className="space-y-4">
-                        {[...Array(5)].map((_, i) => (
-                            <div>
-                                <DocumentPreview
-                                    key={i}
-                                    i={i + 1}
-                                    title={`Document Title ${
-                                        i + 1
-                                    } Lorem Ipsum Dolor Sit Amet Lorem Ipsum Dolor Sit Amet Long Title`}
-                                    author={`Author ${i + 1}`}
-                                    content={`This is a preview of the document content. It will truncate to a single line with ellipsis if it's too long lorem ipsum dolor sit amet lorem ipsum`}
-                                    similarity={0.95}
-                                />
-                                <Separator />
-                            </div>
-                        ))}
+                        {retrievalResultExpanded.ranked_documents.map(
+                            (id: string, index: number) => (
+                                <div>
+                                    <DocumentPreview
+                                        key={id}
+                                        i={id}
+                                        rank={index + 1}
+                                        title={`Document ${id}`}
+                                        author={`Author ${id}`}
+                                        content={`This is a preview of the document content. It will truncate to a single line with ellipsis if it's too long lorem ipsum dolor sit amet lorem ipsum`}
+                                        similarity={0.95}
+                                    />
+                                    <Separator />
+                                </div>
+                            )
+                        )}
                     </div>
                 </TabsContent>
             </Tabs>
             {showQueryDetailsModal && (
-                <QueryDetailsModal expansionTerms={expansionTerms} setShowQueryDetailsModal={setShowQueryDetailsModal} />
+                <QueryDetailsModal
+                    expansionTerms={expansionTerms}
+                    setShowQueryDetailsModal={setShowQueryDetailsModal}
+                />
             )}
             {showInvertedFileModal && (
-                <InvertedFileModal invertedFile={invertedFile} documentsList={documentsList} setShowInvertedFileModal={setShowInvertedFileModal} />
+                <InvertedFileModal
+                    invertedFile={invertedFile}
+                    documentsList={documentsList}
+                    setShowInvertedFileModal={setShowInvertedFileModal}
+                />
             )}
         </main>
     );
