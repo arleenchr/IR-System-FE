@@ -2,10 +2,11 @@
 
 import { RetrievalForm } from "@/components/ui/retrieval-form";
 import { RetrievalResult } from "@/components/ui/retrieval-result";
+import { ResultType } from "@/interfaces/result";
 import { useState } from "react";
 
 export default function Home() {
-    const [result, setResult] = useState({});
+    const [result, setResult] = useState<ResultType | null>(null);
     
     return (
         <div className="flex h-screen overscroll-none">

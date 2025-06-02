@@ -16,6 +16,7 @@ import {
 } from "./select";
 import axios from "axios";
 import api from "@/lib/api";
+import { ResultType } from "@/interfaces/result";
 
 export function RetrievalForm({
     setResult,
@@ -64,7 +65,7 @@ export function RetrievalForm({
                 queryNormalization,
             } = formData;
 
-            const results: any = {};
+            const results: ResultType = {};
 
             const weighting_method = {
                 tf_raw: docTF && docTFMethod === "raw",
@@ -86,6 +87,31 @@ export function RetrievalForm({
                         limit: queryExpansionLimit,
                     })
                     .then((res) => (results.expansion = res.data))
+            );
+
+            // Documents List
+            promises.push(
+                api
+                    .get("/documents/list")
+                    .then((res) => (results.documents = res.data))
+            );
+
+            // Inverted File
+            promises.push(
+                api
+                    .get("/retrieval/inverted-file", {
+                        params: {
+                            use_stemming: useStemming,
+                            use_stopword_removal: useStopwords,
+                            tf_raw: docTF && docTFMethod == "raw",
+                            tf_log: docTF && docTFMethod == "logarithmic",
+                            tf_binary: docTF && docTFMethod == "binary",
+                            tf_augmented: docTF && docTFMethod == "augmented",
+                            use_idf: docIDF,
+                            use_normalization: docNormalization,
+                        },
+                    })
+                    .then((res) => (results.invertedFile = res.data))
             );
 
             await Promise.all(promises);

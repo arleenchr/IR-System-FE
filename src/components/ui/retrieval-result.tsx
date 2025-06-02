@@ -14,6 +14,8 @@ import {
     SelectValue,
 } from "./select";
 import { ScrollArea } from "./scroll-area";
+import { InvertedFileModal } from "./inverted-file-modal";
+import { QueryDetailsModal } from "./query-details-modal";
 
 const mockResults = [
     {
@@ -35,83 +37,24 @@ const mockResults = [
     },
 ];
 
-const invertedFile = {
-    to: {
-        "1": 3.0,
-        "2": 2.0,
-    },
-    do: {
-        "1": 0.8300749985576875,
-        "3": 1.072856372028895,
-        "4": 1.072856372028895,
-    },
-    is: {
-        "1": 4.0,
-    },
-    be: {
-        "1": 0.0,
-        "2": 0.0,
-        "3": 0.0,
-        "4": 0.0,
-    },
-};
-
 export function RetrievalResult({ result }: { result: any }) {
     if (!result) return <div></div>;
 
     const [page, setPage] = useState(0);
     const [showInvertedFileModal, setShowInvertedFileModal] = useState(false);
-    const [showQueryWeightsModal, setShowQueryWeightsModal] = useState(false);
-    const [selectedDoc, setSelectedDoc] = useState("all");
+    const [showQueryDetailsModal, setShowQueryDetailsModal] = useState(false);
 
     const totalPages = mockResults.length;
 
-    const expansion = result.expansion || "";
-    // const { original_query, expanded_terms, expansion_terms } = expansion;
-    const original_query = expansion.original_query || "";
-    const expanded_terms = expansion.expanded_terms || "";
-    const expansion_terms = expansion.expansion_terms || "";
+    const expansion = result.expansion;
+    const originalQuery = expansion.original_query;
+    const expandedTerms = expansion.expanded_terms;
+    const expansionTerms = expansion.expansion_terms;
+
+    const documentsList = result.documents.documents;
+    const invertedFile = result.invertedFile.inverted_file;
 
     const mockResult = mockResults[page];
-
-    const documentOptions = [
-        "all",
-        "1",
-        "2",
-        "3",
-        "4",
-        "5",
-        "6",
-        "7",
-        "8",
-        "9",
-        "10",
-        "11",
-        "12",
-        "13",
-    ];
-
-    function formatStringJSON(
-        data: Record<string, Record<string, number>>
-    ): string {
-        return (
-            `{\n` +
-            Object.entries(data)
-                .map(
-                    ([term, docs]) =>
-                        `    ${term}: {\n` +
-                        Object.entries(docs)
-                            .map(
-                                ([doc, value]) =>
-                                    `        "${doc}": ${value.toFixed(1)},`
-                            )
-                            .join("\n") +
-                        `\n    },`
-                )
-                .join("\n") +
-            `\n}`
-        );
-    }
 
     return (
         <main className="flex-1 p-6 overflow-y-auto custom-scrollbar">
@@ -120,23 +63,21 @@ export function RetrievalResult({ result }: { result: any }) {
                     <h2 className="text-2xl font-semibold mb-2">
                         Results for{" "}
                         <span className="font-bold text-2xl bg-gradient-to-r from-[#9EA3F7] to-[#4AFCED] bg-clip-text text-transparent">
-                            {mockResult.original}
+                            {originalQuery}
                         </span>
                     </h2>
                     <p className="text-base text-[#8b8b8b]">
                         Expanded query terms:{" "}
                         <span className="text-[#BFBFC5]">
-                        {/* <pre className="text-[#BFBFC5]"> */}
-                            {expanded_terms != "" ? (expanded_terms.join(" ")) : "Expanded query"}
-                        {/* </pre> */}
+                            {expandedTerms.join(" ")}
                         </span>
                     </p>
                     <Button
                         variant="link"
                         className="p-0 m-0 text-xs text-accent"
-                        onClick={() => setShowQueryWeightsModal(true)}
+                        onClick={() => setShowQueryDetailsModal(true)}
                     >
-                        View query weights
+                        View query details
                     </Button>
                 </div>
                 <div className="flex flex-col shrink-0 my-3 px-2 h-fit items-center text-foreground text-center content-center">
@@ -237,107 +178,11 @@ export function RetrievalResult({ result }: { result: any }) {
                     </div>
                 </TabsContent>
             </Tabs>
-            {showQueryWeightsModal && (
-                <div
-                    className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 backdrop-blur-sm"
-                    onClick={() => setShowQueryWeightsModal(false)}
-                >
-                    <Card
-                        className="w-full max-w-2xl p-6 flex-row"
-                        onClick={(e) => e.stopPropagation()}
-                    >
-                        <div className="space-y-4 w-full">
-                            <div className="flex justify-between items-center">
-                                <p className="text-lg py-1 font-semibold">
-                                    Original query weights
-                                </p>
-                            </div>
-                            <ScrollArea className="overflow-y-auto max-h-100 border p-2 rounded-md bg-sidebar">
-                                <pre className="text-sm whitespace-pre-wrap font-mono">
-                                    {formatStringJSON(invertedFile)}
-                                </pre>
-                            </ScrollArea>
-                        </div>
-                        <div className="space-y-4 w-full">
-                            <div className="flex justify-between items-center">
-                                <p className="text-lg font-semibold">
-                                    Expanded query weights
-                                </p>
-                                <Button
-                                    variant="ghost"
-                                    size="icon"
-                                    className="hover:bg-transparent"
-                                    onClick={() =>
-                                        setShowQueryWeightsModal(false)
-                                    }
-                                >
-                                    ✕
-                                </Button>
-                            </div>
-                            <ScrollArea className="overflow-y-auto max-h-100 border p-2 rounded-md bg-sidebar">
-                                <pre className="text-sm whitespace-pre-wrap font-mono">
-                                    {JSON.stringify(expansion_terms, null, 2)}
-                                </pre>
-                            </ScrollArea>
-                        </div>
-                    </Card>
-                </div>
+            {showQueryDetailsModal && (
+                <QueryDetailsModal expansionTerms={expansionTerms} setShowQueryDetailsModal={setShowQueryDetailsModal} />
             )}
             {showInvertedFileModal && (
-                <div
-                    className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 backdrop-blur-sm"
-                    onClick={() => setShowInvertedFileModal(false)}
-                >
-                    <Card
-                        className="w-full max-w-lg p-6"
-                        onClick={(e) => e.stopPropagation()}
-                    >
-                        <div className="space-y-4">
-                            <div className="flex justify-between items-center">
-                                <p className="text-lg font-semibold">
-                                    Inverted File
-                                </p>
-                                <Button
-                                    variant="ghost"
-                                    size="icon"
-                                    className="hover:bg-transparent"
-                                    onClick={() =>
-                                        setShowInvertedFileModal(false)
-                                    }
-                                >
-                                    ✕
-                                </Button>
-                            </div>
-                            <Select
-                                value={selectedDoc}
-                                onValueChange={setSelectedDoc}
-                            >
-                                <SelectTrigger className="w-full flex-grow bg-background text-foreground cursor-pointer">
-                                    <SelectValue placeholder="Select document" />
-                                </SelectTrigger>
-                                <SelectContent className="bg-background text-white max-h-64">
-                                    {documentOptions.map((doc) => (
-                                        <SelectItem
-                                            key={doc}
-                                            value={doc}
-                                            className="cursor-pointer"
-                                        >
-                                            {doc === "all"
-                                                ? "All Documents"
-                                                : `Document ${doc}`}
-                                        </SelectItem>
-                                    ))}
-                                </SelectContent>
-                            </Select>
-
-                            <ScrollArea className="overflow-y-auto max-h-100 border p-2 rounded-md bg-sidebar">
-                                <pre className="text-sm whitespace-pre-wrap font-mono">
-                                    {formatStringJSON(invertedFile)}
-                                </pre>
-                            </ScrollArea>
-                        </div>
-                    </Card>
-                </div>
+                <InvertedFileModal invertedFile={invertedFile} documentsList={documentsList} setShowInvertedFileModal={setShowInvertedFileModal} />
             )}
         </main>
     );
