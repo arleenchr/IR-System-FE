@@ -56,7 +56,9 @@ const invertedFile = {
     },
 };
 
-export function RetrievalResult() {
+export function RetrievalResult({ result }: { result: any }) {
+    if (!result) return <div></div>;
+
     const [page, setPage] = useState(0);
     const [showInvertedFileModal, setShowInvertedFileModal] = useState(false);
     const [showQueryWeightsModal, setShowQueryWeightsModal] = useState(false);
@@ -64,7 +66,13 @@ export function RetrievalResult() {
 
     const totalPages = mockResults.length;
 
-    const result = mockResults[page];
+    const expansion = result.expansion || "";
+    // const { original_query, expanded_terms, expansion_terms } = expansion;
+    const original_query = expansion.original_query || "";
+    const expanded_terms = expansion.expanded_terms || "";
+    const expansion_terms = expansion.expansion_terms || "";
+
+    const mockResult = mockResults[page];
 
     const documentOptions = [
         "all",
@@ -112,13 +120,15 @@ export function RetrievalResult() {
                     <h2 className="text-2xl font-semibold mb-2">
                         Results for{" "}
                         <span className="font-bold text-2xl bg-gradient-to-r from-[#9EA3F7] to-[#4AFCED] bg-clip-text text-transparent">
-                            {result.original}
+                            {mockResult.original}
                         </span>
                     </h2>
                     <p className="text-base text-[#8b8b8b]">
-                        Expanded query:{" "}
+                        Expanded query terms:{" "}
                         <span className="text-[#BFBFC5]">
-                            {result.expanded}
+                        {/* <pre className="text-[#BFBFC5]"> */}
+                            {expanded_terms != "" ? (expanded_terms.join(" ")) : "Expanded query"}
+                        {/* </pre> */}
                         </span>
                     </p>
                     <Button
@@ -266,7 +276,7 @@ export function RetrievalResult() {
                             </div>
                             <ScrollArea className="overflow-y-auto max-h-100 border p-2 rounded-md bg-sidebar">
                                 <pre className="text-sm whitespace-pre-wrap font-mono">
-                                    {formatStringJSON(invertedFile)}
+                                    {JSON.stringify(expansion_terms, null, 2)}
                                 </pre>
                             </ScrollArea>
                         </div>

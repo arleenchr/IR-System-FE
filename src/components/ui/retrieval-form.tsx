@@ -14,9 +14,88 @@ import {
     SelectTrigger,
     SelectValue,
 } from "./select";
+import axios from "axios";
+import api from "@/lib/api";
 
-export function RetrievalForm() {
-    const [queryType, setQueryType] = useState("interactive");
+export function RetrievalForm({
+    setResult,
+}: {
+    setResult: (data: any) => void;
+}) {
+    const [formData, setFormData] = useState({
+        documentCollection: "",
+        queryType: "interactive",
+        queryText: "",
+        queryFile: "",
+        relevanceJudgement: "",
+        useStemming: false,
+        useStopwords: false,
+        queryExpansionLimit: -1,
+        queryExpansionThreshold: 0.7,
+        docTF: true,
+        docTFMethod: "raw",
+        docIDF: false,
+        docNormalization: false,
+        queryTF: true,
+        queryTFMethod: "raw",
+        queryIDF: false,
+        queryNormalization: false,
+    });
+
+    const handleSubmit = async () => {
+        try {
+            const {
+                documentCollection,
+                queryType,
+                queryText,
+                queryFile,
+                relevanceJudgement,
+                useStemming,
+                useStopwords,
+                queryExpansionLimit,
+                queryExpansionThreshold,
+                docTF,
+                docTFMethod,
+                docIDF,
+                docNormalization,
+                queryTF,
+                queryTFMethod,
+                queryIDF,
+                queryNormalization,
+            } = formData;
+
+            const results: any = {};
+
+            const weighting_method = {
+                tf_raw: docTF && docTFMethod === "raw",
+                tf_log: docTF && docTFMethod === "logarithmic",
+                tf_binary: docTF && docTFMethod === "binary",
+                tf_augmented: docTF && docTFMethod === "augmented",
+                use_idf: docIDF,
+                use_normalization: docNormalization,
+            };
+
+            const promises = [];
+
+            // Query Expansion Endpoint
+            promises.push(
+                api
+                    .post("/query/expand", {
+                        query: queryText,
+                        threshold: queryExpansionThreshold,
+                        limit: queryExpansionLimit,
+                    })
+                    .then((res) => (results.expansion = res.data))
+            );
+
+            await Promise.all(promises);
+            console.log(results);
+            setResult(results);
+        } catch (error) {
+            console.error("Error fetching:", error);
+            setResult({ error: "Failed to fetch" });
+        }
+    };
 
     return (
         <aside className="w-86 min-w-0 p-6 bg-sidebar border-r overflow-y-auto custom-scrollbar">
@@ -35,7 +114,15 @@ export function RetrievalForm() {
             {/* Query Type */}
             <div className="flex flex-col gap-2 my-4">
                 <Label className="text-base">Query Type</Label>
-                <RadioGroup value={queryType} onValueChange={setQueryType}>
+                <RadioGroup
+                    value={formData.queryType}
+                    onChange={(e) =>
+                        setFormData((prev) => ({
+                            ...prev,
+                            queryType: (e.target as HTMLInputElement).value,
+                        }))
+                    }
+                >
                     <div className="flex items-center space-x-2">
                         <RadioGroupItem
                             value="interactive"
@@ -54,20 +141,37 @@ export function RetrievalForm() {
                     </div>
                 </RadioGroup>
 
-                {queryType === "interactive" && (
+                {formData.queryType === "interactive" && (
                     <div className="flex flex-row gap-2 justify-center">
                         <Label className="text-base">Query</Label>
-                        <Input placeholder="Enter query..." />
+                        <Input
+                            placeholder="Enter query..."
+                            onChange={(e) =>
+                                setFormData((prev) => ({
+                                    ...prev,
+                                    queryText: (e.target as HTMLInputElement)
+                                        .value,
+                                }))
+                            }
+                        />
                     </div>
                 )}
 
-                {queryType === "batch" && (
+                {formData.queryType === "batch" && (
                     <div className="flex flex-col gap-2">
                         <div className="flex items-center gap-2">
                             <Label className="w-40 text-base">Query</Label>
                             <Input
                                 type="file"
                                 className="flex-grow cursor-pointer"
+                                onChange={(e) =>
+                                    setFormData((prev) => ({
+                                        ...prev,
+                                        queryFile: (
+                                            e.target as HTMLInputElement
+                                        ).value,
+                                    }))
+                                }
                             />
                         </div>
                         <div className="flex items-center gap-2">
@@ -77,6 +181,14 @@ export function RetrievalForm() {
                             <Input
                                 type="file"
                                 className="flex-grow cursor-pointer"
+                                onChange={(e) =>
+                                    setFormData((prev) => ({
+                                        ...prev,
+                                        relevanceJudgement: (
+                                            e.target as HTMLInputElement
+                                        ).value,
+                                    }))
+                                }
                             />
                         </div>
                     </div>
@@ -86,27 +198,81 @@ export function RetrievalForm() {
             {/* Options */}
             <div className="space-y-2 mb-4">
                 <div className="flex items-center space-x-2">
-                    <Checkbox id="stemming" className="cursor-pointer" />
+                    <Checkbox
+                        id="stemming"
+                        className="cursor-pointer"
+                        onChange={(e) =>
+                            setFormData((prev) => ({
+                                ...prev,
+                                useStemming: (e.target as HTMLInputElement)
+                                    .checked,
+                            }))
+                        }
+                    />
                     <Label htmlFor="stemming">Apply Stemming</Label>
                 </div>
                 <div className="flex items-center space-x-2">
-                    <Checkbox id="stopwords" className="cursor-pointer" />
+                    <Checkbox
+                        id="stopwords"
+                        className="cursor-pointer"
+                        onChange={(e) =>
+                            setFormData((prev) => ({
+                                ...prev,
+                                useStopwords: (e.target as HTMLInputElement)
+                                    .checked,
+                            }))
+                        }
+                    />
                     <Label htmlFor="stopwords">Remove Stop Words</Label>
                 </div>
             </div>
 
+            <Separator />
+
             {/* Query Expansion Threshold */}
-            <div className="flex flex-row gap-2 my-4">
-                <Label className="flex-grow whitespace-nowrap">
-                    Query Expansion Threshold
-                </Label>
-                <Input
-                    type="number"
-                    min={0}
-                    max={100}
-                    step={1}
-                    defaultValue={0}
-                />
+
+            <div className="flex flex-col gap-2 my-4">
+                <Label className="text-base">Query Expansion</Label>
+                <div className="flex flex-row gap-2">
+                    <Label className="flex-grow whitespace-nowrap">
+                        Word Limit
+                    </Label>
+                    <Input
+                        type="number"
+                        min={-1}
+                        max={100}
+                        step={1}
+                        defaultValue={-1}
+                        onChange={(e) =>
+                            setFormData((prev) => ({
+                                ...prev,
+                                queryExpansionLimit: Number(e.target.value),
+                            }))
+                        }
+                    />
+                </div>
+                <p className="text-xs text-[#888888]">
+                    Word limit value -1 means no limitation for the expansion
+                    word count.
+                </p>
+                <div className="flex flex-row gap-2">
+                    <Label className="flex-grow whitespace-nowrap">
+                        Similarity Threshold
+                    </Label>
+                    <Input
+                        type="number"
+                        min={0}
+                        max={1}
+                        step={0.01}
+                        defaultValue={0.7}
+                        onChange={(e) =>
+                            setFormData((prev) => ({
+                                ...prev,
+                                queryExpansionThreshold: Number(e.target.value),
+                            }))
+                        }
+                    />
+                </div>
             </div>
 
             <Separator />
@@ -136,6 +302,14 @@ export function RetrievalForm() {
                                         key={method}
                                         value={method}
                                         className="cursor-pointer"
+                                        onChange={(e) =>
+                                            setFormData((prev) => ({
+                                                ...prev,
+                                                docTFMethod: (
+                                                    e.target as HTMLInputElement
+                                                ).value,
+                                            }))
+                                        }
                                     >
                                         {method}
                                     </SelectItem>
@@ -163,6 +337,26 @@ export function RetrievalForm() {
                                 value={method}
                                 id={method}
                                 className="cursor-pointer"
+                                onChange={(e) => {
+                                    const val = (e.target as HTMLInputElement)
+                                        .value;
+                                    setFormData((prev) => ({
+                                        ...prev,
+                                        docTF: [
+                                            "TF only",
+                                            "TF x IDF",
+                                            "TF x IDF x cosine normalization",
+                                        ].includes(val),
+                                        docIDF: [
+                                            "IDF only",
+                                            "TF x IDF",
+                                            "TF x IDF x cosine normalization",
+                                        ].includes(val),
+                                        docNormalization:
+                                            val ===
+                                            "TF x IDF x cosine normalization",
+                                    }));
+                                }}
                             />
                             <Label htmlFor={method}>{method}</Label>
                         </div>
@@ -197,6 +391,14 @@ export function RetrievalForm() {
                                         key={method}
                                         value={method}
                                         className="cursor-pointer"
+                                        onChange={(e) =>
+                                            setFormData((prev) => ({
+                                                ...prev,
+                                                queryTFMethod: (
+                                                    e.target as HTMLInputElement
+                                                ).value,
+                                            }))
+                                        }
                                     >
                                         {method}
                                     </SelectItem>
@@ -224,6 +426,26 @@ export function RetrievalForm() {
                                 value={method}
                                 id={method}
                                 className="cursor-pointer"
+                                onChange={(e) => {
+                                    const val = (e.target as HTMLInputElement)
+                                        .value;
+                                    setFormData((prev) => ({
+                                        ...prev,
+                                        queryTF: [
+                                            "TF only",
+                                            "TF x IDF",
+                                            "TF x IDF x cosine normalization",
+                                        ].includes(val),
+                                        queryIDF: [
+                                            "IDF only",
+                                            "TF x IDF",
+                                            "TF x IDF x cosine normalization",
+                                        ].includes(val),
+                                        queryNormalization:
+                                            val ===
+                                            "TF x IDF x cosine normalization",
+                                    }));
+                                }}
                             />
                             <Label htmlFor={method}>{method}</Label>
                         </div>
@@ -232,7 +454,10 @@ export function RetrievalForm() {
             </div>
 
             {/* Retrieve Button */}
-            <Button className="w-full mt-2 text-black font-semibold bg-gradient-to-r from-[#9EA3F7] to-[#4AFCED] cursor-pointer">
+            <Button
+                className="w-full mt-2 text-black font-semibold bg-gradient-to-r from-[#9EA3F7] to-[#4AFCED] cursor-pointer"
+                onClick={handleSubmit}
+            >
                 Retrieve
             </Button>
         </aside>
