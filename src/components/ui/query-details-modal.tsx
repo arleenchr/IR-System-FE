@@ -10,8 +10,8 @@ export function QueryDetailsModal({
 }: {
     expansionTerms: any;
     setShowQueryDetailsModal: (showQueryDetailsModal: boolean) => void;
-    queryWeightOriginal?: Record<string, number>;
-    queryWeightExpanded?: Record<string, number>;
+    queryWeightOriginal?: Record<string, number> | null;
+    queryWeightExpanded?: Record<string, number> | null;
 }) {
     return (
         <div

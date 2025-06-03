@@ -1,3 +1,12 @@
+export interface WeightingMethod {
+    tf_raw: boolean;
+    tf_log: boolean;
+    tf_binary: boolean;
+    tf_augmented: boolean;
+    use_idf: boolean;
+    use_normalization: boolean;
+}
+
 export interface InvertedFile {
     status: string;
     total_documents: number;
@@ -6,14 +15,7 @@ export interface InvertedFile {
     parameters: {
         use_stemming: boolean;
         use_stopword_removal: boolean;
-        document_weighting_method: {
-            tf_raw: boolean;
-            tf_log: boolean;
-            tf_binary: boolean;
-            tf_augmented: boolean;
-            use_idf: boolean;
-            use_normalization: boolean;
-        };
+        document_weighting_method: WeightingMethod;
     };
     cached: boolean;
     cached_info: string;

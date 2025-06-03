@@ -1,3 +1,5 @@
+import { WeightingMethod } from "./retrieval";
+
 export interface ExpansionTerm {
     term: string;
     similarity: number;
@@ -22,13 +24,6 @@ export interface QueryWeight {
     query: string;
     query_vector: Record<string, number>;
     total_terms: number;
-    weighting_method: {
-        tf_raw: boolean;
-        tf_log: boolean;
-        tf_binary: boolean;
-        tf_augmented: boolean;
-        use_idf: boolean;
-        use_normalization: boolean;
-    };
+    weighting_method: WeightingMethod;
     message: string;
 }

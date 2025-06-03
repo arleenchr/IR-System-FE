@@ -1,3 +1,5 @@
+import { WeightingMethod } from "./retrieval";
+
 export interface SingleQueryResult {
     id: string;
     similarity: number;
@@ -14,7 +16,7 @@ export interface BatchQueryResult {
 export interface BatchProcessingInfo {
     query_file_path: string;
     total_relevant_queries: number;
-    weighting_method: Record<string, boolean>;
+    weighting_method: WeightingMethod;
     cache_terms_count: number;
 }
 

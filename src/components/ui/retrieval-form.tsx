@@ -17,13 +17,18 @@ import {
 import axios from "axios";
 import api from "@/lib/api";
 import { ResultType } from "@/interfaces/result";
+import { WeightingMethod } from "@/interfaces/retrieval";
 
 export function RetrievalForm({
     setResult,
     setLoading,
+    setDocWeightingMethod,
+    setQueryWeightingMethod,
 }: {
     setResult: (data: any) => void;
     setLoading: (state: boolean) => void;
+    setDocWeightingMethod: (docWeightingMethod: WeightingMethod) => void;
+    setQueryWeightingMethod: (queryWeightingMethod: WeightingMethod) => void;
 }) {
     const [formData, setFormData] = useState({
         documentCollection: "",
@@ -91,6 +96,8 @@ export function RetrievalForm({
                 use_idf: queryIDF,
                 use_normalization: queryNormalization,
             };
+            setDocWeightingMethod(doc_weighting_method);
+            setQueryWeightingMethod(query_weighting_method);
 
             const promises = [];
 

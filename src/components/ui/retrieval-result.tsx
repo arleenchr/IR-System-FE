@@ -18,13 +18,20 @@ import { InvertedFileModal } from "./inverted-file-modal";
 import { QueryDetailsModal } from "./query-details-modal";
 import { ResultType } from "@/interfaces/result";
 import { SingleQueryResult } from "@/interfaces/retrieval-result";
+import { WeightingMethod } from "@/interfaces/retrieval";
+import api from "@/lib/api";
+import { QueryWeight } from "@/interfaces/query";
 
 export function RetrievalResult({
     result,
     loading,
+    docWeightingMethod,
+    queryWeightingMethod,
 }: {
     result: ResultType | null;
     loading: boolean;
+    docWeightingMethod: WeightingMethod | null;
+    queryWeightingMethod: WeightingMethod | null;
 }) {
     if (loading) {
         return (
@@ -50,6 +57,9 @@ export function RetrievalResult({
     const [showInvertedFileModal, setShowInvertedFileModal] = useState(false);
     const [showQueryDetailsModal, setShowQueryDetailsModal] = useState(false);
 
+    const [queryWeightOriginal, setQueryWeightOriginal] = useState<QueryWeight | null>(null);
+    const [queryWeightExpanded, setQueryWeightExpanded] = useState<QueryWeight | null>(null);
+
     const expansion = result.expansion;
     const originalQuery = expansion?.original_query;
     const expandedTerms = expansion?.expanded_terms;
@@ -59,9 +69,6 @@ export function RetrievalResult({
     const retrievalResultOriginal = result.retrievalOriginal;
     const retrievalResultExpanded = result.retrievalExpanded;
 
-    const queryWeightOriginal = result.queryWeightOriginal;
-    const queryWeightExpanded = result.queryWeightExpanded;
-
     // batch query result
     const totalPages = isInteractive
         ? 0
@@ -69,6 +76,35 @@ export function RetrievalResult({
 
     const documentsList = result.documents?.documents;
     const invertedFile = result.invertedFile?.inverted_file;
+
+    const handleViewQueryDetail = async (
+        query: string,
+        expandedQuery: string
+    ) => {
+        try {
+            const promises = [];
+            // Query weights
+            promises.push(
+                api
+                    .post("/retrieval/calculate-query-weight", {
+                        query: query,
+                        weighting_method: queryWeightingMethod,
+                    })
+                    .then((res) => setQueryWeightOriginal(res.data))
+            );
+            promises.push(
+                api
+                    .post("/retrieval/calculate-query-weight", {
+                        query: expandedQuery,
+                        weighting_method: queryWeightingMethod,
+                    })
+                    .then((res) => setQueryWeightExpanded(res.data))
+            );
+            await Promise.all(promises);
+        } catch (error) {
+            console.error("Error fetching query weights", error);
+        }
+    };
 
     return (
         <main className="flex-1 p-6 overflow-y-auto custom-scrollbar">
@@ -92,7 +128,27 @@ export function RetrievalResult({
                     <Button
                         variant="link"
                         className="p-0 m-0 text-xs text-accent"
-                        onClick={() => setShowQueryDetailsModal(true)}
+                        onClick={() => {
+                            try {
+                                handleViewQueryDetail(
+                                    (isInteractive
+                                        ? retrievalResultOriginal?.query_used
+                                        : retrievalResultOriginal
+                                              ?.query_results?.[page]?.query) ?? "",
+                                    (isInteractive
+                                        ? retrievalResultExpanded?.query_used
+                                        : retrievalResultExpanded
+                                              ?.query_results?.[page]?.query) ?? "",
+                                );
+                            } catch (error) {
+                                console.error(
+                                    "Error fetching query weights",
+                                    error
+                                );
+                            } finally {
+                                setShowQueryDetailsModal(true);
+                            }
+                        }}
                     >
                         View query details
                     </Button>
