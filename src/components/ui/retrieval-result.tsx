@@ -389,7 +389,7 @@ export function RetrievalResult({
                         )?.map((doc: SingleQueryResult, index: number) => (
                             <div key={doc.id}>
                                 <DocumentPreview
-                                    i={doc.id}
+                                    id={doc.id}
                                     rank={index + 1}
                                     title={
                                         retrievedDocumentDetailsOriginal
@@ -443,7 +443,7 @@ export function RetrievalResult({
                             (doc: SingleQueryResult, index: number) => (
                                 <div key={doc.id}>
                                     <DocumentPreview
-                                        i={doc.id}
+                                        id={doc.id}
                                         rank={index + 1}
                                         title={
                                             retrievedDocumentDetailsExpanded

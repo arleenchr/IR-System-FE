@@ -1,5 +1,5 @@
 export default function DocumentPreview({
-    i,
+    id,
     rank,
     title,
     author,
@@ -7,7 +7,7 @@ export default function DocumentPreview({
     bibliographic,
     similarity,
 }: {
-    i: string;
+    id: string;
     rank: number;
     title: string;
     author: string;
@@ -19,11 +19,13 @@ export default function DocumentPreview({
         <div className="flex flex-row gap-20 mb-6 w-full max-w-full">
             <div className="flex flex-grow flex-col min-w-0">
                 <p className="flex flex-row gap-1.5 text-xs text-accent/70">
+                    Document ID: <strong>{id}</strong>
+                    {" • "}
                     Rank
-                    <span className="font-bold">#{rank}</span>
+                    <strong>#{rank}</strong>
                     {" • "}
                     Similarity:
-                    <span className="font-bold">{similarity.toFixed(5)}</span>
+                    <strong>{similarity.toFixed(5)}</strong>
                 </p>
                 <h3 className="line-clamp-2 text-lg font-medium text-primary">
                     {title}
