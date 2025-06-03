@@ -12,6 +12,8 @@ export default function Home() {
     const [queryWeightingMethod, setQueryWeightingMethod] =
         useState<WeightingMethod | null>(null);
     const [result, setResult] = useState<ResultType | null>(null);
+    const [globalUseStemming, setGlobalUseStemming] = useState(false);
+    const [globalUseStopwords, setGlobalUseStopwords] = useState(false);
 
     const [loading, setLoading] = useState(false);
 
@@ -22,6 +24,10 @@ export default function Home() {
                 setLoading={setLoading}
                 setDocWeightingMethod={setDocWeightingMethod}
                 setQueryWeightingMethod={setQueryWeightingMethod}
+                globalUseStemming={globalUseStemming}
+                setGlobalUseStemming={setGlobalUseStemming}
+                globalUseStopwords={globalUseStopwords}
+                setGlobalUseStopwords={setGlobalUseStopwords}
             />
             <RetrievalResult
                 result={result}

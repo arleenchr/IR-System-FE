@@ -14,7 +14,6 @@ import {
     SelectTrigger,
     SelectValue,
 } from "./select";
-import axios from "axios";
 import api from "@/lib/api";
 import { ResultType } from "@/interfaces/result";
 import { WeightingMethod } from "@/interfaces/retrieval";
@@ -24,11 +23,19 @@ export function RetrievalForm({
     setLoading,
     setDocWeightingMethod,
     setQueryWeightingMethod,
+    globalUseStemming,
+    setGlobalUseStemming,
+    globalUseStopwords,
+    setGlobalUseStopwords,
 }: {
     setResult: (data: any) => void;
     setLoading: (state: boolean) => void;
     setDocWeightingMethod: (docWeightingMethod: WeightingMethod) => void;
     setQueryWeightingMethod: (queryWeightingMethod: WeightingMethod) => void;
+    globalUseStemming: boolean;
+    setGlobalUseStemming: (globalUseStemming: boolean) => void;
+    globalUseStopwords: boolean;
+    setGlobalUseStopwords: (globalUseStopwords: boolean) => void;
 }) {
     const [formData, setFormData] = useState({
         documentCollection: "",
@@ -100,6 +107,37 @@ export function RetrievalForm({
             setQueryWeightingMethod(query_weighting_method);
 
             const promises = [];
+
+            console.log(
+                "globalUseStemming: ",
+                globalUseStemming,
+                "| useStemming",
+                useStemming
+            );
+            console.log(
+                "globalUseStopwords: ",
+                globalUseStopwords,
+                "| useStopwords",
+                useStopwords
+            );
+
+            if (
+                globalUseStemming != useStemming ||
+                globalUseStopwords != useStopwords
+            ) {
+                // Re-train Word2Vec model
+                console.log("Re-training Word2Vec model...");
+                promises.push(
+                    await api
+                        .post("/query/retrain-model", {
+                            use_stemming: useStemming,
+                            use_stopword_removal: useStopwords,
+                        })
+                        .then((res) => {
+                            console.log(res);
+                        })
+                );
+            }
 
             if (queryType == "interactive") {
                 // Query Expansion
@@ -193,6 +231,8 @@ export function RetrievalForm({
             await Promise.all(promises);
             console.log(results);
             setResult(results);
+            setGlobalUseStemming(useStemming);
+            setGlobalUseStopwords(useStopwords);
         } catch (error) {
             console.error("Error fetching:", error);
             setResult({ error: "Failed to fetch" });
@@ -327,11 +367,11 @@ export function RetrievalForm({
                     <Checkbox
                         id="stemming"
                         className="cursor-pointer"
-                        onChange={(e) =>
+                        checked={formData.useStemming}
+                        onCheckedChange={(checked) =>
                             setFormData((prev) => ({
                                 ...prev,
-                                useStemming: (e.target as HTMLInputElement)
-                                    .checked,
+                                useStemming: checked as boolean,
                             }))
                         }
                     />
@@ -341,11 +381,11 @@ export function RetrievalForm({
                     <Checkbox
                         id="stopwords"
                         className="cursor-pointer"
-                        onChange={(e) =>
+                        checked={formData.useStopwords}
+                        onCheckedChange={(checked) =>
                             setFormData((prev) => ({
                                 ...prev,
-                                useStopwords: (e.target as HTMLInputElement)
-                                    .checked,
+                                useStopwords: checked as boolean,
                             }))
                         }
                     />
