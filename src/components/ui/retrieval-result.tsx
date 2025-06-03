@@ -76,6 +76,9 @@ export function RetrievalResult({
 
     const [retrievalResultExpanded, setRetrievalResultExpanded] =
         useState<RetrievalResultType | null>(result.retrievalExpanded ?? null);
+    const [allExpandedRetrievalResults, setAllExpandedRetrievalResults] =
+        useState<RetrievalResultType[]>([]);
+    const [expandedMAP, setExpandedMAP] = useState<number>(0.0);
 
     const [
         retrievedDocumentDetailsOriginal,
@@ -164,6 +167,46 @@ export function RetrievalResult({
         }
     };
 
+    const fetchAllExpandedResults = async () => {
+        if (!expansionBatch || !retrievalResultOriginal?.query_results) return;
+
+        const queries = expansionBatch.query_results;
+        const promises = queries.map((q, i) => {
+            const expandedQuery = q.expanded_terms.join(" ") ?? "";
+            const relevantDocs =
+                retrievalResultOriginal.query_results?.[i]
+                    ?.relevant_judgement ?? [];
+
+            return api
+                .post("/retrieval/retrieve", {
+                    query: expandedQuery,
+                    relevant_doc: relevantDocs,
+                    weighting_method: docWeightingMethod,
+                    use_stemming: useStemming,
+                    use_stopword_removal: useStopwords,
+                })
+                .then((res) => res.data);
+        });
+
+        const results = await Promise.all(promises);
+        console.log("all expanded retrieval results: ", results);
+        setAllExpandedRetrievalResults(results);
+        setExpandedMAP(computeMAP(results));
+    };
+
+    const computeMAP = (results: RetrievalResultType[]): number => {
+        const validAPs = results
+            .map((r) => r.average_precision)
+            .filter((ap): ap is number => typeof ap === "number");
+
+        if (validAPs.length === 0) return 0;
+
+        const sum = validAPs.reduce((acc, ap) => acc + ap, 0);
+        console.log("results:", results);
+        console.log("MAP expanded =", sum / validAPs.length);
+        return sum / validAPs.length;
+    };
+
     const getDocumentDetails = async (
         idsOriginal: string[],
         idsExpanded: string[]
@@ -249,6 +292,11 @@ export function RetrievalResult({
         );
     }, [retrievalResultOriginal, retrievalResultExpanded, page]);
 
+    useEffect(() => {
+        if (!retrievalResultOriginal || !expansionBatch) return;
+        fetchAllExpandedResults();
+    }, [retrievalResultOriginal, expansionBatch]);
+
     return (
         <main className="flex-1 p-6 overflow-y-auto custom-scrollbar">
             <div className="flex flex-row mb-1">
@@ -300,19 +348,17 @@ export function RetrievalResult({
                 </div>
                 {!isInteractive && (
                     <div className="flex flex-col shrink-0 my-3 px-2 h-fit items-center text-foreground text-center content-center">
-                        <p className="text-xs">MAP score</p>
-                        {/* <p className="text-xs">original query</p> */}
+                        <p className="text-sm font-semibold">MAP score</p>
+                        <p className="text-xs">original query</p>
                         <p className="text-base font-bold">
                             {retrievalResultOriginal?.mean_average_precision?.toFixed(
                                 5
                             )}
                         </p>
-                        {/* <p className="text-xs">expanded query</p>
+                        <p className="text-xs">expanded query</p>
                         <p className="text-base font-bold">
-                            {retrievalResultExpanded?.mean_average_precision?.toFixed(
-                                5
-                            )}
-                        </p> */}
+                            {expandedMAP.toFixed(5)}
+                        </p>
                     </div>
                 )}
 
