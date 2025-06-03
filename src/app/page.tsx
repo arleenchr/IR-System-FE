@@ -34,6 +34,8 @@ export default function Home() {
                 loading={loading}
                 docWeightingMethod={docWeightingMethod}
                 queryWeightingMethod={queryWeightingMethod}
+                useStemming={globalUseStemming}
+                useStopwords={globalUseStopwords}
             />
         </div>
     );

@@ -159,6 +159,8 @@ export function RetrievalForm({
                             relevant_doc: [],
                             query: queryText,
                             weighting_method: doc_weighting_method,
+                            use_stemming: useStemming,
+                            use_stopword_removal: useStopwords,
                         })
                         .then((res) => (results.retrievalOriginal = res.data))
                 );
@@ -166,6 +168,8 @@ export function RetrievalForm({
                     relevant_doc: [],
                     query: queryText,
                     weighting_method: doc_weighting_method,
+                    use_stemming: useStemming,
+                    use_stopword_removal: useStopwords,
                 };
 
                 console.log("Request Body:", requestBody);
@@ -190,6 +194,8 @@ export function RetrievalForm({
                             query_file: queryFile,
                             relevant_doc_filename: relevanceJudgement,
                             weighting_method: doc_weighting_method,
+                            use_stemming: useStemming,
+                            use_stopword_removal: useStopwords,
                         })
                         .then((res) => (results.retrievalOriginal = res.data))
                 );
@@ -198,6 +204,8 @@ export function RetrievalForm({
                     query_file: queryFile,
                     relevant_doc_filename: relevanceJudgement,
                     weighting_method: doc_weighting_method,
+                    use_stemming: useStemming,
+                    use_stopword_removal: useStopwords,
                 };
 
                 console.log("Request Body:", requestBody);

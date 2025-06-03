@@ -31,11 +31,15 @@ export function RetrievalResult({
     loading,
     docWeightingMethod,
     queryWeightingMethod,
+    useStemming,
+    useStopwords,
 }: {
     result: ResultType | null;
     loading: boolean;
     docWeightingMethod: WeightingMethod | null;
     queryWeightingMethod: WeightingMethod | null;
+    useStemming: boolean;
+    useStopwords: boolean;
 }) {
     if (loading) {
         return (
@@ -141,6 +145,8 @@ export function RetrievalResult({
                         relevant_doc: relevant_doc,
                         query: query,
                         weighting_method: docWeightingMethod,
+                        use_stemming: useStemming,
+                        use_stopword_removal: useStopwords,
                     })
                     .then((res) => {
                         setRetrievalResultExpanded(res.data);
