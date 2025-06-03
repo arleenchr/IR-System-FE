@@ -1,3 +1,4 @@
+import { ExpansionTerm } from "@/interfaces/query";
 import { Button } from "./button";
 import { Card } from "./card";
 import { ScrollArea } from "./scroll-area";
@@ -7,11 +8,13 @@ export function QueryDetailsModal({
     setShowQueryDetailsModal,
     queryWeightOriginal,
     queryWeightExpanded,
+    queryExpansionTerms,
 }: {
     expansionTerms: any;
     setShowQueryDetailsModal: (showQueryDetailsModal: boolean) => void;
     queryWeightOriginal?: Record<string, number> | null;
     queryWeightExpanded?: Record<string, number> | null;
+    queryExpansionTerms?: Record<string, ExpansionTerm[]>;
 }) {
     return (
         <div
@@ -19,7 +22,7 @@ export function QueryDetailsModal({
             onClick={() => setShowQueryDetailsModal(false)}
         >
             <Card
-                className="w-full max-w-4xl p-6 flex-row"
+                className="w-full max-w-7xl p-6 flex-row"
                 onClick={(e) => e.stopPropagation()}
             >
                 <div className="space-y-4 w-full">
@@ -35,9 +38,19 @@ export function QueryDetailsModal({
                     </ScrollArea>
                 </div>
                 <div className="space-y-4 w-full">
+                    <p className="text-lg py-1 font-semibold">
+                        Expanded query weights
+                    </p>
+                    <ScrollArea className="overflow-y-auto h-128 border p-2 rounded-md bg-sidebar">
+                        <pre className="text-sm whitespace-pre-wrap font-mono">
+                            {JSON.stringify(queryWeightExpanded, null, 2)}
+                        </pre>
+                    </ScrollArea>
+                </div>
+                <div className="space-y-4 w-full">
                     <div className="flex justify-between items-center">
                         <p className="text-lg font-semibold">
-                            Expanded query weights
+                            Expanded query similarity
                         </p>
                         <Button
                             variant="ghost"
@@ -50,7 +63,7 @@ export function QueryDetailsModal({
                     </div>
                     <ScrollArea className="overflow-y-auto h-128 border p-2 rounded-md bg-sidebar">
                         <pre className="text-sm whitespace-pre-wrap font-mono">
-                            {JSON.stringify(queryWeightExpanded, null, 2)}
+                            {JSON.stringify(queryExpansionTerms, null, 2)}
                         </pre>
                     </ScrollArea>
                 </div>

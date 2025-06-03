@@ -23,7 +23,7 @@ import {
 } from "@/interfaces/retrieval-result";
 import { WeightingMethod } from "@/interfaces/retrieval";
 import api from "@/lib/api";
-import { QueryWeight } from "@/interfaces/query";
+import { ExpansionTerm, QueryWeight } from "@/interfaces/query";
 import { RetrievedDocumentDetails } from "@/interfaces/documents";
 
 export function RetrievalResult({
@@ -65,6 +65,10 @@ export function RetrievalResult({
         useState<QueryWeight | null>(null);
     const [queryWeightExpanded, setQueryWeightExpanded] =
         useState<QueryWeight | null>(null);
+    const [queryExpansionTerms, setQueryExpansionTerms] = useState<Record<
+        string,
+        ExpansionTerm[]
+    > | null>(null);
 
     const [retrievalResultExpanded, setRetrievalResultExpanded] =
         useState<RetrievalResultType | null>(result.retrievalExpanded ?? null);
@@ -198,11 +202,15 @@ export function RetrievalResult({
     useEffect(() => {
         if (isInteractive) {
             retrieveExpandedBatchQuery(expandedTerms?.join(" ") ?? "", []);
+            setQueryExpansionTerms(expansionTerms ?? {});
         } else if (expansionBatch?.query_results?.[page]?.expanded_terms) {
             retrieveExpandedBatchQuery(
                 expansionBatch.query_results[page].expanded_terms.join(" "),
                 retrievalResultOriginal?.query_results?.[page]
                     .relevant_judgement ?? []
+            );
+            setQueryExpansionTerms(
+                expansionBatch.query_results[page].expansion_terms
             );
         }
     }, [page, expansionBatch]);
@@ -287,11 +295,18 @@ export function RetrievalResult({
                 {!isInteractive && (
                     <div className="flex flex-col shrink-0 my-3 px-2 h-fit items-center text-foreground text-center content-center">
                         <p className="text-xs">MAP score</p>
+                        {/* <p className="text-xs">original query</p> */}
                         <p className="text-base font-bold">
                             {retrievalResultOriginal?.mean_average_precision?.toFixed(
                                 5
                             )}
                         </p>
+                        {/* <p className="text-xs">expanded query</p>
+                        <p className="text-base font-bold">
+                            {retrievalResultExpanded?.mean_average_precision?.toFixed(
+                                5
+                            )}
+                        </p> */}
                     </div>
                 )}
 
@@ -480,6 +495,7 @@ export function RetrievalResult({
                     setShowQueryDetailsModal={setShowQueryDetailsModal}
                     queryWeightOriginal={queryWeightOriginal?.query_vector}
                     queryWeightExpanded={queryWeightExpanded?.query_vector}
+                    queryExpansionTerms={queryExpansionTerms ?? {}}
                 />
             )}
             {showInvertedFileModal && (
