@@ -115,13 +115,16 @@ export function RetrievalResult({
         }
     };
 
-    const retrieveExpandedBatchQuery = async (query: string) => {
+    const retrieveExpandedBatchQuery = async (
+        query: string,
+        relevant_doc: string[]
+    ) => {
         try {
             const promises = [];
             promises.push(
                 api
                     .post("/retrieval/retrieve", {
-                        relevant_doc: [],
+                        relevant_doc: relevant_doc,
                         query: query,
                         weighting_method: docWeightingMethod,
                     })
@@ -144,7 +147,9 @@ export function RetrievalResult({
     useEffect(() => {
         if (expansionBatch?.query_results?.[page]?.expanded_terms) {
             retrieveExpandedBatchQuery(
-                expansionBatch.query_results[page].expanded_terms.join(" ")
+                expansionBatch.query_results[page].expanded_terms.join(" "),
+                retrievalResultOriginal?.query_results?.[page]
+                    .relevant_judgement ?? []
             );
         }
     }, [page, expansionBatch]);
@@ -183,11 +188,7 @@ export function RetrievalResult({
                                         : retrievalResultOriginal
                                               ?.query_results?.[page]?.query) ??
                                         "",
-                                    (isInteractive
-                                        ? retrievalResultExpanded?.query_used
-                                        : retrievalResultExpanded
-                                              ?.query_results?.[page]?.query) ??
-                                        ""
+                                    retrievalResultExpanded?.query_used ?? ""
                                 );
                             } catch (error) {
                                 console.error(
@@ -220,11 +221,11 @@ export function RetrievalResult({
                             disabled={page === 0}
                             onClick={() => {
                                 setPage((p) => Math.max(p - 1, 0));
-                                retrieveExpandedBatchQuery(
-                                    expansionBatch?.query_results?.[
-                                        page
-                                    ].expanded_terms.join(" ") || ""
-                                );
+                                // retrieveExpandedBatchQuery(
+                                //     expansionBatch?.query_results?.[
+                                //         page
+                                //     ].expanded_terms.join(" ") || ""
+                                // );
                             }}
                         >
                             <ChevronLeft />
@@ -239,11 +240,11 @@ export function RetrievalResult({
                                 setPage((p) =>
                                     Math.min(p + 1, (totalPages ?? 0) - 1)
                                 );
-                                retrieveExpandedBatchQuery(
-                                    expansionBatch?.query_results?.[
-                                        page
-                                    ].expanded_terms.join(" ") || ""
-                                );
+                                // retrieveExpandedBatchQuery(
+                                //     expansionBatch?.query_results?.[
+                                //         page
+                                //     ].expanded_terms.join(" ") || ""
+                                // );
                             }}
                         >
                             <ChevronRight />
@@ -372,7 +373,7 @@ export function RetrievalResult({
             {showInvertedFileModal && (
                 <InvertedFileModal
                     invertedFile={invertedFile}
-                    documentsList={documentsList}
+                    documentsList={documentsList ?? []}
                     setShowInvertedFileModal={setShowInvertedFileModal}
                 />
             )}

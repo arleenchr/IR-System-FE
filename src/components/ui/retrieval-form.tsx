@@ -162,25 +162,6 @@ export function RetrievalForm({
                         })
                         .then((res) => {
                             results.expansionBatch = res.data;
-
-                            // const expandedTerms: string[] =
-                            //     res.data.expanded_terms || [];
-                            // const expandedQuery = expandedTerms.join(" ");
-
-                            // Retrieve with expanded query
-                            // promises.push(
-                            //     api
-                            //         .post("/retrieval/retrieve", {
-                            //             relevant_doc: [],
-                            //             query: expandedQuery,
-                            //             weighting_method: doc_weighting_method,
-                            //         })
-                            //         .then(
-                            //             (res) =>
-                            //                 (results.retrievalExpanded =
-                            //                     res.data)
-                            //         )
-                            // );
                         })
                 );
                 // Retrieval (batch query)
@@ -203,13 +184,6 @@ export function RetrievalForm({
                 console.log("Request Body:", requestBody);
             }
 
-            // Documents List
-            promises.push(
-                api
-                    .get("/documents/list")
-                    .then((res) => (results.documents = res.data))
-            );
-
             // Inverted File
             promises.push(
                 api
@@ -226,6 +200,13 @@ export function RetrievalForm({
                         },
                     })
                     .then((res) => (results.invertedFile = res.data))
+            );
+
+            // Documents List
+            promises.push(
+                api
+                    .get("/documents/list")
+                    .then((res) => (results.documents = res.data))
             );
 
             await Promise.all(promises);

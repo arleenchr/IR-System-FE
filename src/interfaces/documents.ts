@@ -8,3 +8,11 @@ export interface Documents {
     total_documents: number;
     documents: Document[];
 }
+
+export interface DocumentWeights {
+    status: string;
+    document_id: string;
+    weights: Record<string, number>;
+    total_terms: number;
+    message: string;
+}

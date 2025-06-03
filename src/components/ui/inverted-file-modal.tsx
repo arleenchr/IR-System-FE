@@ -1,11 +1,17 @@
-
 import { Button } from "./button";
 import { Card } from "./card";
 import { ScrollArea } from "./scroll-area";
 import { formatStringJSON } from "@/utils/format-json";
-import { useState } from "react";
-import { Document } from "@/interfaces/documents";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./select";
+import { useEffect, useState } from "react";
+import { Document, DocumentWeights } from "@/interfaces/documents";
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from "./select";
+import api from "@/lib/api";
 
 const documentOptions = [
     "all",
@@ -30,10 +36,25 @@ export function InvertedFileModal({
     setShowInvertedFileModal,
 }: {
     invertedFile: any;
-    documentsList: any;
+    documentsList: Document[];
     setShowInvertedFileModal: (showInvertedFileModal: boolean) => void;
 }) {
     const [selectedDoc, setSelectedDoc] = useState("all");
+    const [documentWeights, setDocumentWeights] =
+        useState<DocumentWeights | null>(null);
+    const [loadingDocWeights, setLoadingDocWeights] = useState(false);
+
+    useEffect(() => {
+        if (selectedDoc === "all") {
+            setDocumentWeights(null);
+            return;
+        }
+        setLoadingDocWeights(true);
+        api.get(`/retrieval/document-weights/${selectedDoc}`)
+            .then((res) => setDocumentWeights(res.data))
+            .catch((err) => console.error("Failed to fetch doc weights", err))
+            .finally(() => setLoadingDocWeights(false));
+    }, [selectedDoc]);
 
     return (
         <div
@@ -71,7 +92,7 @@ export function InvertedFileModal({
                             {documentsList.map((doc: Document) => (
                                 <SelectItem
                                     key={doc.id}
-                                    value={doc.label}
+                                    value={doc.id}
                                     className="cursor-pointer"
                                 >
                                     {doc.label}
@@ -80,10 +101,25 @@ export function InvertedFileModal({
                         </SelectContent>
                     </Select>
 
-                    <ScrollArea className="overflow-y-auto max-h-128 border p-2 rounded-md bg-sidebar">
-                        <pre className="text-sm whitespace-pre-wrap font-mono">
-                            {formatStringJSON(invertedFile).slice(0, 10000) + '...\n(Truncated)'}
-                        </pre>
+                    <ScrollArea className="overflow-y-auto h-128 border p-2 rounded-md bg-sidebar">
+                        {loadingDocWeights ? (
+                            <p className="text-sm">
+                                Loading document weights...
+                            </p>
+                        ) : (
+                            <pre className="text-sm whitespace-pre-wrap font-mono">
+                                {selectedDoc === "all"
+                                    ? formatStringJSON(invertedFile).slice(
+                                          0,
+                                          10000
+                                      ) + "...\n(Truncated)"
+                                    : JSON.stringify(
+                                          documentWeights?.weights,
+                                          null,
+                                          2
+                                      )}
+                            </pre>
+                        )}
                     </ScrollArea>
                 </div>
             </Card>

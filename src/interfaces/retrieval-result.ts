@@ -10,6 +10,7 @@ export interface BatchQueryResult {
     query: string;
     average_precision: number;
     total_retrieved: number;
+    relevant_judgement: string[];
     top_documents: SingleQueryResult[];
 }
 
