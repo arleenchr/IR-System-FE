@@ -1,8 +1,14 @@
+export interface SingleQueryResult {
+    id: string;
+    similarity: number;
+}
+
 export interface BatchQueryResult {
     query_index: number;
+    query: string;
     average_precision: number;
     total_retrieved: number;
-    top_documents: string[];
+    top_documents: SingleQueryResult[];
 }
 
 export interface BatchProcessingInfo {
@@ -15,7 +21,7 @@ export interface BatchProcessingInfo {
 export interface RetrievalResult {
     status: string;
     // interactive query
-    ranked_documents?: string[];
+    ranked_documents?: SingleQueryResult[];
     average_precision?: number;
     total_retrieved?: number;
     query_used?: string;

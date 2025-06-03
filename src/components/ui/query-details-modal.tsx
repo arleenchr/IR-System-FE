@@ -5,9 +5,13 @@ import { ScrollArea } from "./scroll-area";
 export function QueryDetailsModal({
     expansionTerms,
     setShowQueryDetailsModal,
+    queryWeightOriginal,
+    queryWeightExpanded,
 }: {
     expansionTerms: any;
     setShowQueryDetailsModal: (showQueryDetailsModal: boolean) => void;
+    queryWeightOriginal?: Record<string, number>;
+    queryWeightExpanded?: Record<string, number>;
 }) {
     return (
         <div
@@ -24,9 +28,9 @@ export function QueryDetailsModal({
                             Original query weights
                         </p>
                     </div>
-                    <ScrollArea className="overflow-y-auto max-h-100 border p-2 rounded-md bg-sidebar">
+                    <ScrollArea className="overflow-y-auto h-128 border p-2 rounded-md bg-sidebar">
                         <pre className="text-sm whitespace-pre-wrap font-mono">
-                            sample
+                            {JSON.stringify(queryWeightOriginal, null, 2)}
                         </pre>
                     </ScrollArea>
                 </div>
@@ -44,11 +48,9 @@ export function QueryDetailsModal({
                             ✕
                         </Button>
                     </div>
-                    <ScrollArea className="overflow-y-auto max-h-100 border p-2 rounded-md bg-sidebar">
+                    <ScrollArea className="overflow-y-auto h-128 border p-2 rounded-md bg-sidebar">
                         <pre className="text-sm whitespace-pre-wrap font-mono">
-                            *to be edited with actual weights, not similarity
-                            <br></br>
-                            {JSON.stringify(expansionTerms, null, 2)}
+                            {JSON.stringify(queryWeightExpanded, null, 2)}
                         </pre>
                     </ScrollArea>
                 </div>

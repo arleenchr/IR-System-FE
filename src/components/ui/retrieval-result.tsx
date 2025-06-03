@@ -4,7 +4,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "./tabs";
 import { Button } from "./button";
 import { Pagination } from "./pagination";
 import { useState } from "react";
-import { ChevronLeft, ChevronRight } from "@deemlol/next-icons";
+import { ChevronLeft, ChevronRight, Search } from "@deemlol/next-icons";
 import { Card } from "./card";
 import {
     Select,
@@ -17,29 +17,34 @@ import { ScrollArea } from "./scroll-area";
 import { InvertedFileModal } from "./inverted-file-modal";
 import { QueryDetailsModal } from "./query-details-modal";
 import { ResultType } from "@/interfaces/result";
+import { SingleQueryResult } from "@/interfaces/retrieval-result";
 
-const mockResults = [
-    {
-        original:
-            "Original query 1 lorem ipsum dolor sit amet lorem ipsum dolor sit amet",
-        expanded:
-            "Expanded query 1 lorem ipsum dolor sit amet lorem ipsum dolor sit amet lorem ipsum dolor sit amet lorem ipsum dolor sit amet lorem ipsum dolor sit amet",
-        documents: Array(5).fill(null),
-    },
-    {
-        original: "Original query 2",
-        expanded: "Expanded query 2",
-        documents: Array(5).fill(null),
-    },
-    {
-        original: "Original query 3",
-        expanded: "Expanded query 3",
-        documents: Array(5).fill(null),
-    },
-];
-
-export function RetrievalResult({ result }: { result: ResultType }) {
-    if (!result) return <div></div>;
+export function RetrievalResult({
+    result,
+    loading,
+}: {
+    result: ResultType | null;
+    loading: boolean;
+}) {
+    if (loading) {
+        return (
+            <main className="flex-1 flex items-center justify-center h-full">
+                <div className="flex flex-col items-center gap-4">
+                    <div className="w-12 h-12 border-4 border-blue-300 border-t-transparent rounded-full animate-spin" />
+                    <p className="text-lg text-gray-600">Loading...</p>
+                </div>
+            </main>
+        );
+    }
+    if (!result)
+        return (
+            <main className="flex-1 flex items-center justify-center h-full">
+                <Search size={128} color="#9EA3F7" />
+                <h1 className="text-6xl font-bold mb-4 bg-gradient-to-r from-[#9EA3F7] to-[#4AFCED] bg-clip-text text-transparent">
+                    Information Retrieval
+                </h1>
+            </main>
+        );
 
     const [page, setPage] = useState(0);
     const [showInvertedFileModal, setShowInvertedFileModal] = useState(false);
@@ -53,6 +58,9 @@ export function RetrievalResult({ result }: { result: ResultType }) {
     const isInteractive = result.isInteractive || false;
     const retrievalResultOriginal = result.retrievalOriginal;
     const retrievalResultExpanded = result.retrievalExpanded;
+
+    const queryWeightOriginal = result.queryWeightOriginal;
+    const queryWeightExpanded = result.queryWeightExpanded;
 
     // batch query result
     const totalPages = isInteractive
@@ -72,7 +80,7 @@ export function RetrievalResult({ result }: { result: ResultType }) {
                             {isInteractive
                                 ? originalQuery
                                 : retrievalResultOriginal?.query_results?.[page]
-                                      ?.query_index}
+                                      ?.query}
                         </span>
                     </h2>
                     <p className="text-base text-[#8b8b8b]">
@@ -93,7 +101,9 @@ export function RetrievalResult({ result }: { result: ResultType }) {
                     <div className="flex flex-col shrink-0 my-3 px-2 h-fit items-center text-foreground text-center content-center">
                         <p className="text-xs">MAP score</p>
                         <p className="text-base font-bold">
-                            {retrievalResultOriginal?.mean_average_precision?.toFixed(5)}
+                            {retrievalResultOriginal?.mean_average_precision?.toFixed(
+                                5
+                            )}
                         </p>
                     </div>
                 )}
@@ -154,13 +164,22 @@ export function RetrievalResult({ result }: { result: ResultType }) {
                                 : retrievalResultOriginal?.query_results?.[page]
                                       ?.total_retrieved}
                         </strong>{" "}
-                        documents retrieved • AP score:{" "}
-                        <strong>
-                            {isInteractive
-                                ? retrievalResultOriginal?.average_precision?.toFixed(5)
-                                : retrievalResultOriginal?.query_results?.[page]
-                                      ?.average_precision.toFixed(5)}
-                        </strong>
+                        documents retrieved
+                        {!isInteractive && (
+                            <>
+                                {" "}
+                                • AP score:{" "}
+                                <strong>
+                                    {isInteractive
+                                        ? retrievalResultOriginal?.average_precision?.toFixed(
+                                              5
+                                          )
+                                        : retrievalResultOriginal?.query_results?.[
+                                              page
+                                          ]?.average_precision.toFixed(5)}
+                                </strong>
+                            </>
+                        )}
                     </p>
 
                     <div className="space-y-4">
@@ -168,16 +187,16 @@ export function RetrievalResult({ result }: { result: ResultType }) {
                             ? retrievalResultOriginal?.ranked_documents
                             : retrievalResultOriginal?.query_results?.[page]
                                   ?.top_documents
-                        )?.map((id: string, index: number) => (
+                        )?.map((doc: SingleQueryResult, index: number) => (
                             <div>
                                 <DocumentPreview
-                                    key={id}
-                                    i={id}
+                                    key={doc.id}
+                                    i={doc.id}
                                     rank={index + 1}
-                                    title={`Document ${id}`}
-                                    author={`Author ${id}`}
+                                    title={`Document ${doc.id}`}
+                                    author={`Author ${doc.id}`}
                                     content={`This is a preview of the document content. It will truncate to a single line with ellipsis if it's too long lorem ipsum dolor sit amet lorem ipsum`}
-                                    similarity={0.95}
+                                    similarity={doc.similarity}
                                 />
                                 <Separator />
                             </div>
@@ -193,25 +212,31 @@ export function RetrievalResult({ result }: { result: ResultType }) {
                                 {isInteractive &&
                                     retrievalResultExpanded?.total_retrieved}
                             </strong>{" "}
-                            documents retrieved • AP score:{" "}
-                            <strong>
-                                {isInteractive &&
-                                    retrievalResultExpanded?.average_precision}
-                            </strong>
+                            documents retrieved
+                            {!isInteractive && (
+                                <>
+                                    {" "}
+                                    • AP score:{" "}
+                                    <strong>
+                                        {isInteractive &&
+                                            retrievalResultExpanded?.average_precision}
+                                    </strong>
+                                </>
+                            )}
                         </p>
 
                         <div className="space-y-4">
                             {retrievalResultExpanded?.ranked_documents?.map(
-                                (id: string, index: number) => (
+                                (doc: SingleQueryResult, index: number) => (
                                     <div>
                                         <DocumentPreview
-                                            key={id}
-                                            i={id}
+                                            key={doc.id}
+                                            i={doc.id}
                                             rank={index + 1}
-                                            title={`Document ${id}`}
-                                            author={`Author ${id}`}
+                                            title={`Document ${doc.id}`}
+                                            author={`Author ${doc.id}`}
                                             content={`This is a preview of the document content. It will truncate to a single line with ellipsis if it's too long lorem ipsum dolor sit amet lorem ipsum`}
-                                            similarity={0.95}
+                                            similarity={doc.similarity}
                                         />
                                         <Separator />
                                     </div>
@@ -225,6 +250,8 @@ export function RetrievalResult({ result }: { result: ResultType }) {
                 <QueryDetailsModal
                     expansionTerms={expansionTerms}
                     setShowQueryDetailsModal={setShowQueryDetailsModal}
+                    queryWeightOriginal={queryWeightOriginal?.query_vector}
+                    queryWeightExpanded={queryWeightExpanded?.query_vector}
                 />
             )}
             {showInvertedFileModal && (

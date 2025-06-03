@@ -20,8 +20,10 @@ import { ResultType } from "@/interfaces/result";
 
 export function RetrievalForm({
     setResult,
+    setLoading,
 }: {
     setResult: (data: any) => void;
+    setLoading: (state: boolean) => void;
 }) {
     const [formData, setFormData] = useState({
         documentCollection: "",
@@ -45,6 +47,8 @@ export function RetrievalForm({
 
     const handleSubmit = async () => {
         try {
+            setLoading(true);
+
             const {
                 documentCollection,
                 queryType,
@@ -67,7 +71,9 @@ export function RetrievalForm({
 
             console.log(formData);
 
-            const results: ResultType = {};
+            const results: ResultType = {
+                isInteractive: queryType == "interactive",
+            };
 
             const doc_weighting_method = {
                 tf_raw: docTF && docTFMethod === "raw",
@@ -76,6 +82,14 @@ export function RetrievalForm({
                 tf_augmented: docTF && docTFMethod === "augmented",
                 use_idf: docIDF,
                 use_normalization: docNormalization,
+            };
+            const query_weighting_method = {
+                tf_raw: queryTF && queryTFMethod === "raw",
+                tf_log: queryTF && queryTFMethod === "logarithmic",
+                tf_binary: queryTF && queryTFMethod === "binary",
+                tf_augmented: queryTF && queryTFMethod === "augmented",
+                use_idf: queryIDF,
+                use_normalization: queryNormalization,
             };
 
             const promises = [];
@@ -100,34 +114,7 @@ export function RetrievalForm({
                             promises.push(
                                 api
                                     .post("/retrieval/retrieve", {
-                                        relevant_doc: [
-                                            "29",
-                                            "68",
-                                            "197",
-                                            "213",
-                                            "214",
-                                            "309",
-                                            "319",
-                                            "324",
-                                            "429",
-                                            "499",
-                                            "636",
-                                            "669",
-                                            "670",
-                                            "674",
-                                            "690",
-                                            "692",
-                                            "695",
-                                            "700",
-                                            "704",
-                                            "709",
-                                            "720",
-                                            "731",
-                                            "733",
-                                            "738",
-                                            "740",
-                                            "1136",
-                                        ],
+                                        relevant_doc: [],
                                         query: expandedQuery,
                                         weighting_method: doc_weighting_method,
                                     })
@@ -137,6 +124,14 @@ export function RetrievalForm({
                                                 res.data)
                                     )
                             );
+                            promises.push(
+                                api.post(
+                                    "/retrieval/calculate-query-weight",{
+                                    query: expandedQuery,
+                                    weighting_method: query_weighting_method,
+                                }
+                                ).then((res) => results.queryWeightExpanded = res.data)
+                            )
                         } else {
                             // Batch
                             /*
@@ -167,54 +162,38 @@ export function RetrievalForm({
                 promises.push(
                     api
                         .post("/retrieval/retrieve", {
-                            relevant_doc: [
-                                "29",
-                                "68",
-                                "197",
-                                "213",
-                                "214",
-                                "309",
-                                "319",
-                                "324",
-                                "429",
-                                "499",
-                                "636",
-                                "669",
-                                "670",
-                                "674",
-                                "690",
-                                "692",
-                                "695",
-                                "700",
-                                "704",
-                                "709",
-                                "720",
-                                "731",
-                                "733",
-                                "738",
-                                "740",
-                                "1136",
-                            ],
+                            relevant_doc: [],
                             query: queryText,
                             weighting_method: doc_weighting_method,
                         })
                         .then((res) => (results.retrievalOriginal = res.data))
                 );
+                const requestBody = {
+                    relevant_doc: [],
+                    query: queryText,
+                    weighting_method: doc_weighting_method,
+                };
+
+                console.log("Request Body:", requestBody);
             } else {
                 // Batch query
                 promises.push(
                     api
                         .post("/retrieval/retrieve-batch", {
                             query_file: queryFile,
-                            relevant_doc: {
-                                "1": ["1", "4", "5", "6"],
-                                "2": ["2", "4", "3"],
-                                "3": ["7", "8", "9"],
-                            },
+                            relevant_doc_filename: relevanceJudgement,
                             weighting_method: doc_weighting_method,
                         })
                         .then((res) => (results.retrievalOriginal = res.data))
                 );
+
+                const requestBody = {
+                    query_file: queryFile,
+                    relevant_doc_filename: relevanceJudgement,
+                    weighting_method: doc_weighting_method,
+                };
+
+                console.log("Request Body:", requestBody);
             }
 
             // Documents List
@@ -242,7 +221,15 @@ export function RetrievalForm({
                     .then((res) => (results.invertedFile = res.data))
             );
 
-            results.isInteractive = queryType == "interactive";
+            // Query weights
+            promises.push(
+                api.post(
+                    "/retrieval/calculate-query-weight",{
+                    query: queryText,
+                    weighting_method: query_weighting_method,
+                }
+                ).then((res) => results.queryWeightOriginal = res.data)
+            )
 
             await Promise.all(promises);
             console.log(results);
@@ -250,6 +237,8 @@ export function RetrievalForm({
         } catch (error) {
             console.error("Error fetching:", error);
             setResult({ error: "Failed to fetch" });
+        } finally {
+            setLoading(false);
         }
     };
 
@@ -345,18 +334,29 @@ export function RetrievalForm({
                             <Label className="w-40 text-base">
                                 Relevance judgement
                             </Label>
-                            <Input
-                                type="file"
-                                className="flex-grow cursor-pointer"
-                                onChange={(e) =>
+                            <Select
+                                onValueChange={(value) =>
                                     setFormData((prev) => ({
                                         ...prev,
-                                        relevanceJudgement: (
-                                            e.target as HTMLInputElement
-                                        ).value,
+                                        relevanceJudgement: value,
                                     }))
                                 }
-                            />
+                            >
+                                <SelectTrigger
+                                    id="relevance-file"
+                                    className="w-full flex-grow bg-sidebar text-foreground cursor-pointer"
+                                >
+                                    <SelectValue placeholder="Select a file" />
+                                </SelectTrigger>
+                                <SelectContent className="bg-sidebar text-white">
+                                    <SelectItem
+                                        value="app/data/parsing/qrels.text"
+                                        className="cursor-pointer"
+                                    >
+                                        qrels.text
+                                    </SelectItem>
+                                </SelectContent>
+                            </Select>
                         </div>
                     </div>
                 )}

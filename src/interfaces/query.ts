@@ -16,3 +16,19 @@ export interface Expansion {
         limit: number;
     };
 }
+
+export interface QueryWeight {
+    status: string;
+    query: string;
+    query_vector: Record<string, number>;
+    total_terms: number;
+    weighting_method: {
+        tf_raw: boolean;
+        tf_log: boolean;
+        tf_binary: boolean;
+        tf_augmented: boolean;
+        use_idf: boolean;
+        use_normalization: boolean;
+    };
+    message: string;
+}
