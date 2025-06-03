@@ -101,23 +101,23 @@ export function RetrievalForm({
 
             const promises = [];
 
-            // Query Expansion Endpoint
-            promises.push(
-                // TODO: expanded query batch
-                api
-                    .post("/query/expand", {
-                        query: queryText,
-                        threshold: queryExpansionThreshold,
-                        limit: queryExpansionLimit,
-                    })
-                    .then((res) => {
-                        results.expansion = res.data;
+            if (queryType == "interactive") {
+                // Query Expansion
+                promises.push(
+                    api
+                        .post("/query/expand", {
+                            query: queryText,
+                            threshold: queryExpansionThreshold,
+                            limit: queryExpansionLimit,
+                        })
+                        .then((res) => {
+                            results.expansion = res.data;
 
-                        const expandedTerms: string[] =
-                            res.data.expanded_terms || [];
-                        const expandedQuery = expandedTerms.join(" ");
+                            const expandedTerms: string[] =
+                                res.data.expanded_terms || [];
+                            const expandedQuery = expandedTerms.join(" ");
 
-                        if (queryType == "interactive") {
+                            // Retrieve with expanded query
                             promises.push(
                                 api
                                     .post("/retrieval/retrieve", {
@@ -131,41 +131,9 @@ export function RetrievalForm({
                                                 res.data)
                                     )
                             );
-                            promises.push(
-                                api.post(
-                                    "/retrieval/calculate-query-weight",{
-                                    query: expandedQuery,
-                                    weighting_method: query_weighting_method,
-                                }
-                                ).then((res) => results.queryWeightExpanded = res.data)
-                            )
-                        } else {
-                            // Batch
-                            /*
-                            promises.push(
-                                api
-                                    .post("/retrieval/retrieve-batch", {
-                                        query_file: queryFile, // TODO: expanded query file
-                                        relevant_doc: {
-                                            "1": ["1", "4", "5", "6"],
-                                            "2": ["2", "4", "3"],
-                                            "3": ["7", "8", "9"],
-                                        },
-                                        weighting_method: doc_weighting_method,
-                                    })
-                                    .then(
-                                        (res) =>
-                                            (results.retrievalOriginal =
-                                                res.data)
-                                    )
-                            );
-                            */
-                        }
-                    })
-            );
-
-            // Retrieval (original query)
-            if (queryType == "interactive") {
+                        })
+                );
+                // Retrieval (original query)
                 promises.push(
                     api
                         .post("/retrieval/retrieve", {
@@ -184,6 +152,38 @@ export function RetrievalForm({
                 console.log("Request Body:", requestBody);
             } else {
                 // Batch query
+                // Query Expansion
+                promises.push(
+                    api
+                        .post("/query/expand-batch", {
+                            query_file: queryFile,
+                            threshold: queryExpansionThreshold,
+                            limit: queryExpansionLimit,
+                        })
+                        .then((res) => {
+                            results.expansionBatch = res.data;
+
+                            // const expandedTerms: string[] =
+                            //     res.data.expanded_terms || [];
+                            // const expandedQuery = expandedTerms.join(" ");
+
+                            // Retrieve with expanded query
+                            // promises.push(
+                            //     api
+                            //         .post("/retrieval/retrieve", {
+                            //             relevant_doc: [],
+                            //             query: expandedQuery,
+                            //             weighting_method: doc_weighting_method,
+                            //         })
+                            //         .then(
+                            //             (res) =>
+                            //                 (results.retrievalExpanded =
+                            //                     res.data)
+                            //         )
+                            // );
+                        })
+                );
+                // Retrieval (batch query)
                 promises.push(
                     api
                         .post("/retrieval/retrieve-batch", {
@@ -227,16 +227,6 @@ export function RetrievalForm({
                     })
                     .then((res) => (results.invertedFile = res.data))
             );
-
-            // Query weights
-            promises.push(
-                api.post(
-                    "/retrieval/calculate-query-weight",{
-                    query: queryText,
-                    weighting_method: query_weighting_method,
-                }
-                ).then((res) => results.queryWeightOriginal = res.data)
-            )
 
             await Promise.all(promises);
             console.log(results);

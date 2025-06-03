@@ -3,7 +3,7 @@ import DocumentPreview from "./document-preview";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "./tabs";
 import { Button } from "./button";
 import { Pagination } from "./pagination";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { ChevronLeft, ChevronRight, Search } from "@deemlol/next-icons";
 import { Card } from "./card";
 import {
@@ -17,7 +17,10 @@ import { ScrollArea } from "./scroll-area";
 import { InvertedFileModal } from "./inverted-file-modal";
 import { QueryDetailsModal } from "./query-details-modal";
 import { ResultType } from "@/interfaces/result";
-import { SingleQueryResult } from "@/interfaces/retrieval-result";
+import {
+    RetrievalResult as RetrievalResultType,
+    SingleQueryResult,
+} from "@/interfaces/retrieval-result";
 import { WeightingMethod } from "@/interfaces/retrieval";
 import api from "@/lib/api";
 import { QueryWeight } from "@/interfaces/query";
@@ -57,17 +60,23 @@ export function RetrievalResult({
     const [showInvertedFileModal, setShowInvertedFileModal] = useState(false);
     const [showQueryDetailsModal, setShowQueryDetailsModal] = useState(false);
 
-    const [queryWeightOriginal, setQueryWeightOriginal] = useState<QueryWeight | null>(null);
-    const [queryWeightExpanded, setQueryWeightExpanded] = useState<QueryWeight | null>(null);
+    const [queryWeightOriginal, setQueryWeightOriginal] =
+        useState<QueryWeight | null>(null);
+    const [queryWeightExpanded, setQueryWeightExpanded] =
+        useState<QueryWeight | null>(null);
+
+    const [retrievalResultExpanded, setRetrievalResultExpanded] =
+        useState<RetrievalResultType | null>(result.retrievalExpanded ?? null);
 
     const expansion = result.expansion;
     const originalQuery = expansion?.original_query;
     const expandedTerms = expansion?.expanded_terms;
     const expansionTerms = expansion?.expansion_terms;
 
+    const expansionBatch = result.expansionBatch;
+
     const isInteractive = result.isInteractive || false;
     const retrievalResultOriginal = result.retrievalOriginal;
-    const retrievalResultExpanded = result.retrievalExpanded;
 
     // batch query result
     const totalPages = isInteractive
@@ -106,6 +115,40 @@ export function RetrievalResult({
         }
     };
 
+    const retrieveExpandedBatchQuery = async (query: string) => {
+        try {
+            const promises = [];
+            promises.push(
+                api
+                    .post("/retrieval/retrieve", {
+                        relevant_doc: [],
+                        query: query,
+                        weighting_method: docWeightingMethod,
+                    })
+                    .then((res) => {
+                        setRetrievalResultExpanded(res.data);
+                        console.log(
+                            "retrievalResultExpanded",
+                            retrievalResultExpanded
+                        );
+                    })
+            );
+        } catch (error) {
+            console.error(
+                "Error fetching retrieval for expanded batch query",
+                error
+            );
+        }
+    };
+
+    useEffect(() => {
+        if (expansionBatch?.query_results?.[page]?.expanded_terms) {
+            retrieveExpandedBatchQuery(
+                expansionBatch.query_results[page].expanded_terms.join(" ")
+            );
+        }
+    }, [page, expansionBatch]);
+
     return (
         <main className="flex-1 p-6 overflow-y-auto custom-scrollbar">
             <div className="flex flex-row mb-1">
@@ -122,7 +165,11 @@ export function RetrievalResult({
                     <p className="text-base text-[#8b8b8b]">
                         Expanded query terms:{" "}
                         <span className="text-[#BFBFC5]">
-                            {expandedTerms?.join(" ")}
+                            {isInteractive
+                                ? expandedTerms?.join(" ")
+                                : expansionBatch?.query_results?.[
+                                      page
+                                  ].expanded_terms.join(" ")}
                         </span>
                     </p>
                     <Button
@@ -134,11 +181,13 @@ export function RetrievalResult({
                                     (isInteractive
                                         ? retrievalResultOriginal?.query_used
                                         : retrievalResultOriginal
-                                              ?.query_results?.[page]?.query) ?? "",
+                                              ?.query_results?.[page]?.query) ??
+                                        "",
                                     (isInteractive
                                         ? retrievalResultExpanded?.query_used
                                         : retrievalResultExpanded
-                                              ?.query_results?.[page]?.query) ?? "",
+                                              ?.query_results?.[page]?.query) ??
+                                        ""
                                 );
                             } catch (error) {
                                 console.error(
@@ -169,7 +218,14 @@ export function RetrievalResult({
                         <Button
                             variant="ghost"
                             disabled={page === 0}
-                            onClick={() => setPage((p) => Math.max(p - 1, 0))}
+                            onClick={() => {
+                                setPage((p) => Math.max(p - 1, 0));
+                                retrieveExpandedBatchQuery(
+                                    expansionBatch?.query_results?.[
+                                        page
+                                    ].expanded_terms.join(" ") || ""
+                                );
+                            }}
                         >
                             <ChevronLeft />
                         </Button>
@@ -179,11 +235,16 @@ export function RetrievalResult({
                         <Button
                             variant="ghost"
                             disabled={page === (totalPages ?? 0) - 1}
-                            onClick={() =>
+                            onClick={() => {
                                 setPage((p) =>
                                     Math.min(p + 1, (totalPages ?? 0) - 1)
-                                )
-                            }
+                                );
+                                retrieveExpandedBatchQuery(
+                                    expansionBatch?.query_results?.[
+                                        page
+                                    ].expanded_terms.join(" ") || ""
+                                );
+                            }}
                         >
                             <ChevronRight />
                         </Button>
@@ -261,46 +322,44 @@ export function RetrievalResult({
                 </TabsContent>
 
                 {/* Tab: Expanded */}
-                {isInteractive && (
-                    <TabsContent value="expanded" className="mx-2">
-                        <p className="text-sm text-[#8b8b8b] mb-4">
-                            <strong>
-                                {isInteractive &&
-                                    retrievalResultExpanded?.total_retrieved}
-                            </strong>{" "}
-                            documents retrieved
-                            {!isInteractive && (
-                                <>
-                                    {" "}
-                                    • AP score:{" "}
-                                    <strong>
-                                        {isInteractive &&
-                                            retrievalResultExpanded?.average_precision}
-                                    </strong>
-                                </>
-                            )}
-                        </p>
+                <TabsContent value="expanded" className="mx-2">
+                    <p className="text-sm text-[#8b8b8b] mb-4">
+                        <strong>
+                            {retrievalResultExpanded?.total_retrieved}
+                        </strong>{" "}
+                        documents retrieved
+                        {!isInteractive && (
+                            <>
+                                {" "}
+                                • AP score:{" "}
+                                <strong>
+                                    {retrievalResultExpanded?.average_precision?.toFixed(
+                                        5
+                                    )}
+                                </strong>
+                            </>
+                        )}
+                    </p>
 
-                        <div className="space-y-4">
-                            {retrievalResultExpanded?.ranked_documents?.map(
-                                (doc: SingleQueryResult, index: number) => (
-                                    <div>
-                                        <DocumentPreview
-                                            key={doc.id}
-                                            i={doc.id}
-                                            rank={index + 1}
-                                            title={`Document ${doc.id}`}
-                                            author={`Author ${doc.id}`}
-                                            content={`This is a preview of the document content. It will truncate to a single line with ellipsis if it's too long lorem ipsum dolor sit amet lorem ipsum`}
-                                            similarity={doc.similarity}
-                                        />
-                                        <Separator />
-                                    </div>
-                                )
-                            )}
-                        </div>
-                    </TabsContent>
-                )}
+                    <div className="space-y-4">
+                        {retrievalResultExpanded?.ranked_documents?.map(
+                            (doc: SingleQueryResult, index: number) => (
+                                <div>
+                                    <DocumentPreview
+                                        key={doc.id}
+                                        i={doc.id}
+                                        rank={index + 1}
+                                        title={`Document ${doc.id}`}
+                                        author={`Author ${doc.id}`}
+                                        content={`This is a preview of the document content. It will truncate to a single line with ellipsis if it's too long lorem ipsum dolor sit amet lorem ipsum`}
+                                        similarity={doc.similarity}
+                                    />
+                                    <Separator />
+                                </div>
+                            )
+                        )}
+                    </div>
+                </TabsContent>
             </Tabs>
             {showQueryDetailsModal && (
                 <QueryDetailsModal

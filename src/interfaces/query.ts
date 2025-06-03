@@ -6,16 +6,32 @@ export interface ExpansionTerm {
 }
 
 export interface Expansion {
-    status: string;
+    status?: string;
+    query_id?: string;
     original_query: string;
     original_terms: string[];
     expansion_terms: Record<string, ExpansionTerm[]>;
     expanded_terms: string[];
     total_original_terms: number;
     total_expanded_terms: number;
+    parameters?: {
+        threshold: number;
+        limit: number;
+    };
+}
+
+export interface ExpansionBatch {
+    status: string;
+    total_queries: number;
+    query_results: Expansion[];
     parameters: {
         threshold: number;
         limit: number;
+    };
+    processing_info: {
+        query_file_path: string;
+        successful_expansions: number;
+        failed_expansions: number;
     };
 }
 
