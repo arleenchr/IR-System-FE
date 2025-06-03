@@ -7,6 +7,7 @@ export interface ResultType {
     documents?: Documents;
     invertedFile?: InvertedFile;
     expansion?: Expansion;
+    isInteractive: boolean;
     retrievalOriginal?: RetrievalResult;
     retrievalExpanded?: RetrievalResult;
     error?: string;

@@ -65,6 +65,8 @@ export function RetrievalForm({
                 queryNormalization,
             } = formData;
 
+            console.log(formData);
+
             const results: ResultType = {};
 
             const doc_weighting_method = {
@@ -80,6 +82,7 @@ export function RetrievalForm({
 
             // Query Expansion Endpoint
             promises.push(
+                // TODO: expanded query batch
                 api
                     .post("/query/expand", {
                         query: queryText,
@@ -89,7 +92,8 @@ export function RetrievalForm({
                     .then((res) => {
                         results.expansion = res.data;
 
-                        const expandedTerms: string[] = res.data.expanded_terms || [];
+                        const expandedTerms: string[] =
+                            res.data.expanded_terms || [];
                         const expandedQuery = expandedTerms.join(" ");
 
                         if (queryType == "interactive") {
@@ -128,9 +132,32 @@ export function RetrievalForm({
                                         weighting_method: doc_weighting_method,
                                     })
                                     .then(
-                                        (res) => (results.retrievalExpanded = res.data)
+                                        (res) =>
+                                            (results.retrievalExpanded =
+                                                res.data)
                                     )
                             );
+                        } else {
+                            // Batch
+                            /*
+                            promises.push(
+                                api
+                                    .post("/retrieval/retrieve-batch", {
+                                        query_file: queryFile, // TODO: expanded query file
+                                        relevant_doc: {
+                                            "1": ["1", "4", "5", "6"],
+                                            "2": ["2", "4", "3"],
+                                            "3": ["7", "8", "9"],
+                                        },
+                                        weighting_method: doc_weighting_method,
+                                    })
+                                    .then(
+                                        (res) =>
+                                            (results.retrievalOriginal =
+                                                res.data)
+                                    )
+                            );
+                            */
                         }
                     })
             );
@@ -173,6 +200,21 @@ export function RetrievalForm({
                         })
                         .then((res) => (results.retrievalOriginal = res.data))
                 );
+            } else {
+                // Batch query
+                promises.push(
+                    api
+                        .post("/retrieval/retrieve-batch", {
+                            query_file: queryFile,
+                            relevant_doc: {
+                                "1": ["1", "4", "5", "6"],
+                                "2": ["2", "4", "3"],
+                                "3": ["7", "8", "9"],
+                            },
+                            weighting_method: doc_weighting_method,
+                        })
+                        .then((res) => (results.retrievalOriginal = res.data))
+                );
             }
 
             // Documents List
@@ -199,6 +241,8 @@ export function RetrievalForm({
                     })
                     .then((res) => (results.invertedFile = res.data))
             );
+
+            results.isInteractive = queryType == "interactive";
 
             await Promise.all(promises);
             console.log(results);
@@ -228,10 +272,10 @@ export function RetrievalForm({
                 <Label className="text-base">Query Type</Label>
                 <RadioGroup
                     value={formData.queryType}
-                    onChange={(e) =>
+                    onValueChange={(value) =>
                         setFormData((prev) => ({
                             ...prev,
-                            queryType: (e.target as HTMLInputElement).value,
+                            queryType: value,
                         }))
                     }
                 >
@@ -273,18 +317,29 @@ export function RetrievalForm({
                     <div className="flex flex-col gap-2">
                         <div className="flex items-center gap-2">
                             <Label className="w-40 text-base">Query</Label>
-                            <Input
-                                type="file"
-                                className="flex-grow cursor-pointer"
-                                onChange={(e) =>
+                            <Select
+                                onValueChange={(value) =>
                                     setFormData((prev) => ({
                                         ...prev,
-                                        queryFile: (
-                                            e.target as HTMLInputElement
-                                        ).value,
+                                        queryFile: value,
                                     }))
                                 }
-                            />
+                            >
+                                <SelectTrigger
+                                    id="query-file"
+                                    className="w-full flex-grow bg-sidebar text-foreground cursor-pointer"
+                                >
+                                    <SelectValue placeholder="Select a query file" />
+                                </SelectTrigger>
+                                <SelectContent className="bg-sidebar text-white">
+                                    <SelectItem
+                                        value="app/data/parsing/query.text"
+                                        className="cursor-pointer"
+                                    >
+                                        query.text
+                                    </SelectItem>
+                                </SelectContent>
+                            </Select>
                         </div>
                         <div className="flex items-center gap-2">
                             <Label className="w-40 text-base">
