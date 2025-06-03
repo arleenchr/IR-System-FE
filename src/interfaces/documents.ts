@@ -16,3 +16,20 @@ export interface DocumentWeights {
     total_terms: number;
     message: string;
 }
+
+export interface DocumentDetails {
+    id: string;
+    title: string;
+    author: string;
+    content: string;
+    bibliographic: string;
+}
+
+export interface RetrievedDocumentDetails {
+    status: string;
+    total_requested: number;
+    total_found: number;
+    documents: DocumentDetails[];
+    not_found_ids: string[];
+    message: string;
+}

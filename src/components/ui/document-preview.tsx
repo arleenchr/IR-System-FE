@@ -4,6 +4,7 @@ export default function DocumentPreview({
     title,
     author,
     content,
+    bibliographic,
     similarity,
 }: {
     i: string;
@@ -11,26 +12,28 @@ export default function DocumentPreview({
     title: string;
     author: string;
     content: string;
+    bibliographic: string;
     similarity: number;
 }) {
     return (
-        <div className="flex flex-row gap-20 mb-6 w-full">
+        <div className="flex flex-row gap-20 mb-6 w-full max-w-full">
             <div className="flex flex-grow flex-col min-w-0">
-                <h3 className="truncate overflow-hidden whitespace-nowrap text-lg font-medium text-primary">
+                <p className="flex flex-row gap-1.5 text-xs text-accent/70">
+                    Rank
+                    <span className="font-bold">#{rank}</span>
+                    {" • "}
+                    Similarity:
+                    <span className="font-bold">{similarity}</span>
+                </p>
+                <h3 className="line-clamp-2 text-lg font-medium text-primary">
                     {title}
                 </h3>
-                <p className="text-sm text-muted-foreground">by {author}</p>
-                <p className="truncate overflow-hidden whitespace-nowrap text-sm mt-1">
-                    {content}
+                <p className="text-sm font-semibold text-muted-foreground">
+                    by {author}
                 </p>
-            </div>
-            <div className="flex flex-col flex-shrink-0 items-center text-muted-foreground pt-1">
-                <div className="flex-grow border rounded-lg w-full text-center content-center ">
-                    <p className="text-xs">Rank</p>
-                    <p className="text-base font-bold">#{rank}</p>
-                </div>
-                <p className="text-xs">
-                    Similarity: <span className="font-bold">{similarity}</span>
+                <p className="line-clamp-3 text-sm mt-1">{content}</p>
+                <p className="text-xs text-muted-foreground">
+                    {bibliographic !== "" && `Bibliography: ${bibliographic}`}
                 </p>
             </div>
         </div>

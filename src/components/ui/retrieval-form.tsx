@@ -112,25 +112,6 @@ export function RetrievalForm({
                         })
                         .then((res) => {
                             results.expansion = res.data;
-
-                            const expandedTerms: string[] =
-                                res.data.expanded_terms || [];
-                            const expandedQuery = expandedTerms.join(" ");
-
-                            // Retrieve with expanded query
-                            promises.push(
-                                api
-                                    .post("/retrieval/retrieve", {
-                                        relevant_doc: [],
-                                        query: expandedQuery,
-                                        weighting_method: doc_weighting_method,
-                                    })
-                                    .then(
-                                        (res) =>
-                                            (results.retrievalExpanded =
-                                                res.data)
-                                    )
-                            );
                         })
                 );
                 // Retrieval (original query)

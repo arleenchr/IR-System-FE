@@ -24,6 +24,7 @@ import {
 import { WeightingMethod } from "@/interfaces/retrieval";
 import api from "@/lib/api";
 import { QueryWeight } from "@/interfaces/query";
+import { RetrievedDocumentDetails } from "@/interfaces/documents";
 
 export function RetrievalResult({
     result,
@@ -67,6 +68,15 @@ export function RetrievalResult({
 
     const [retrievalResultExpanded, setRetrievalResultExpanded] =
         useState<RetrievalResultType | null>(result.retrievalExpanded ?? null);
+
+    const [
+        retrievedDocumentDetailsOriginal,
+        setRetrievedDocumentDetailsOriginal,
+    ] = useState<RetrievedDocumentDetails | null>(null);
+    const [
+        retrievedDocumentDetailsExpanded,
+        setRetrievedDocumentDetailsExpanded,
+    ] = useState<RetrievedDocumentDetails | null>(null);
 
     const expansion = result.expansion;
     const originalQuery = expansion?.original_query;
@@ -144,8 +154,51 @@ export function RetrievalResult({
         }
     };
 
+    const getDocumentDetails = async (
+        idsOriginal: string[],
+        idsExpanded: string[]
+    ) => {
+        try {
+            const promises = [];
+            promises.push(
+                api
+                    .post("/documents/retrieve-by-ids", {
+                        ids: idsOriginal,
+                    })
+                    .then((res) => {
+                        setRetrievedDocumentDetailsOriginal(res.data);
+                        console.log("GET DOC DETAILS ORIGINAL", res.data);
+                    })
+            );
+            promises.push(
+                api
+                    .post("/documents/retrieve-by-ids", {
+                        ids: idsExpanded,
+                    })
+                    .then((res) => {
+                        setRetrievedDocumentDetailsExpanded(res.data);
+                        console.log("GET DOC DETAILS EXPANDED", res.data);
+                    })
+            );
+            // console.log(
+            //     "GET DOC DETAILS ORIGINAL",
+            //     retrievedDocumentDetailsOriginal
+            // );
+            // console.log(
+            //     "GET DOC DETAILS EXPANDED",
+            //     retrievedDocumentDetailsExpanded
+            // );
+
+            await Promise.all(promises);
+        } catch (error) {
+            console.error("Failed to fetch document details", error);
+        }
+    };
+
     useEffect(() => {
-        if (expansionBatch?.query_results?.[page]?.expanded_terms) {
+        if (isInteractive) {
+            retrieveExpandedBatchQuery(expandedTerms?.join(" ") ?? "", []);
+        } else if (expansionBatch?.query_results?.[page]?.expanded_terms) {
             retrieveExpandedBatchQuery(
                 expansionBatch.query_results[page].expanded_terms.join(" "),
                 retrievalResultOriginal?.query_results?.[page]
@@ -153,6 +206,48 @@ export function RetrievalResult({
             );
         }
     }, [page, expansionBatch]);
+
+    useEffect(() => {
+        if (!retrievalResultOriginal) return;
+
+        const idsOriginal = isInteractive
+            ? retrievalResultOriginal?.ranked_documents?.map((doc) => doc.id) ??
+              []
+            : retrievalResultOriginal?.query_results?.[
+                  page
+              ]?.top_documents?.map((doc) => doc.id) ?? [];
+
+        const idsExpanded =
+            retrievalResultExpanded?.ranked_documents?.map((doc) => doc.id) ??
+            [];
+
+        getDocumentDetails(idsOriginal, idsExpanded);
+
+        console.log("idsOriginal", idsOriginal);
+        console.log("idsExpanded", idsExpanded);
+        console.log(
+            "retrievedDocumentDetailsOriginal",
+            retrievedDocumentDetailsOriginal
+        );
+        console.log(
+            "retrievedDocumentDetailsExpanded",
+            retrievedDocumentDetailsExpanded
+        );
+    }, [retrievalResultOriginal, retrievalResultExpanded, page]);
+
+    useEffect(() => {
+        console.log(
+            "🟢 UPDATED retrievedDocumentDetailsOriginal",
+            retrievedDocumentDetailsOriginal
+        );
+    }, [retrievedDocumentDetailsOriginal]);
+
+    useEffect(() => {
+        console.log(
+            "🟢 UPDATED retrievedDocumentDetailsExpanded",
+            retrievedDocumentDetailsExpanded
+        );
+    }, [retrievedDocumentDetailsExpanded]);
 
     return (
         <main className="flex-1 p-6 overflow-y-auto custom-scrollbar">
@@ -306,14 +401,29 @@ export function RetrievalResult({
                             : retrievalResultOriginal?.query_results?.[page]
                                   ?.top_documents
                         )?.map((doc: SingleQueryResult, index: number) => (
-                            <div>
+                            <div key={doc.id}>
                                 <DocumentPreview
-                                    key={doc.id}
                                     i={doc.id}
                                     rank={index + 1}
-                                    title={`Document ${doc.id}`}
-                                    author={`Author ${doc.id}`}
-                                    content={`This is a preview of the document content. It will truncate to a single line with ellipsis if it's too long lorem ipsum dolor sit amet lorem ipsum`}
+                                    title={
+                                        retrievedDocumentDetailsOriginal
+                                            ?.documents?.[index]?.title ??
+                                        `Document ${doc.id}`
+                                    }
+                                    author={
+                                        retrievedDocumentDetailsOriginal
+                                            ?.documents?.[index]?.author ??
+                                        `Author ${doc.id}`
+                                    }
+                                    content={
+                                        retrievedDocumentDetailsOriginal
+                                            ?.documents?.[index]?.content ?? ""
+                                    }
+                                    bibliographic={
+                                        retrievedDocumentDetailsOriginal
+                                            ?.documents?.[index]
+                                            ?.bibliographic ?? ""
+                                    }
                                     similarity={doc.similarity}
                                 />
                                 <Separator />
@@ -345,14 +455,30 @@ export function RetrievalResult({
                     <div className="space-y-4">
                         {retrievalResultExpanded?.ranked_documents?.map(
                             (doc: SingleQueryResult, index: number) => (
-                                <div>
+                                <div key={doc.id}>
                                     <DocumentPreview
-                                        key={doc.id}
                                         i={doc.id}
                                         rank={index + 1}
-                                        title={`Document ${doc.id}`}
-                                        author={`Author ${doc.id}`}
-                                        content={`This is a preview of the document content. It will truncate to a single line with ellipsis if it's too long lorem ipsum dolor sit amet lorem ipsum`}
+                                        title={
+                                            retrievedDocumentDetailsExpanded
+                                                ?.documents?.[index]?.title ??
+                                            `Document ${doc.id}`
+                                        }
+                                        author={
+                                            retrievedDocumentDetailsExpanded
+                                                ?.documents?.[index]?.author ??
+                                            `Author ${doc.id}`
+                                        }
+                                        content={
+                                            retrievedDocumentDetailsExpanded
+                                                ?.documents?.[index]?.content ??
+                                            ""
+                                        }
+                                        bibliographic={
+                                            retrievedDocumentDetailsExpanded
+                                                ?.documents?.[index]
+                                                ?.bibliographic ?? ""
+                                        }
                                         similarity={doc.similarity}
                                     />
                                     <Separator />
