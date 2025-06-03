@@ -12,8 +12,8 @@ export default function Home() {
     const [queryWeightingMethod, setQueryWeightingMethod] =
         useState<WeightingMethod | null>(null);
     const [result, setResult] = useState<ResultType | null>(null);
-    const [globalUseStemming, setGlobalUseStemming] = useState(false);
-    const [globalUseStopwords, setGlobalUseStopwords] = useState(false);
+    const [globalUseStemming, setGlobalUseStemming] = useState(true);
+    const [globalUseStopwords, setGlobalUseStopwords] = useState(true);
 
     const [loading, setLoading] = useState(false);
 
