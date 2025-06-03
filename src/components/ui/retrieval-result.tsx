@@ -235,20 +235,6 @@ export function RetrievalResult({
         );
     }, [retrievalResultOriginal, retrievalResultExpanded, page]);
 
-    useEffect(() => {
-        console.log(
-            "🟢 UPDATED retrievedDocumentDetailsOriginal",
-            retrievedDocumentDetailsOriginal
-        );
-    }, [retrievedDocumentDetailsOriginal]);
-
-    useEffect(() => {
-        console.log(
-            "🟢 UPDATED retrievedDocumentDetailsExpanded",
-            retrievedDocumentDetailsExpanded
-        );
-    }, [retrievedDocumentDetailsExpanded]);
-
     return (
         <main className="flex-1 p-6 overflow-y-auto custom-scrollbar">
             <div className="flex flex-row mb-1">

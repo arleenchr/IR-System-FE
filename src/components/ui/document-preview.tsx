@@ -23,7 +23,7 @@ export default function DocumentPreview({
                     <span className="font-bold">#{rank}</span>
                     {" • "}
                     Similarity:
-                    <span className="font-bold">{similarity}</span>
+                    <span className="font-bold">{similarity.toFixed(5)}</span>
                 </p>
                 <h3 className="line-clamp-2 text-lg font-medium text-primary">
                     {title}

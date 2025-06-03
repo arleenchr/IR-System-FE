@@ -409,14 +409,22 @@ export function RetrievalForm({
                 <Label className="text-base">Document Weighting Method</Label>
                 <div className="flex flex-row gap-2 content-center">
                     <Label
-                        htmlFor="tf-method"
+                        htmlFor="doc-tf-method"
                         className="text-sm whitespace-nowrap"
                     >
                         TF Method
                     </Label>
-                    <Select defaultValue="logarithmic">
+                    <Select
+                        defaultValue="logarithmic"
+                        onValueChange={(value) =>
+                            setFormData((prev) => ({
+                                ...prev,
+                                docTFMethod: value,
+                            }))
+                        }
+                    >
                         <SelectTrigger
-                            id="tf-method"
+                            id="doc-tf-method"
                             className="w-full flex-grow bg-sidebar text-foreground cursor-pointer"
                         >
                             <SelectValue placeholder="Select a method" />
@@ -428,14 +436,6 @@ export function RetrievalForm({
                                         key={method}
                                         value={method}
                                         className="cursor-pointer"
-                                        onChange={(e) =>
-                                            setFormData((prev) => ({
-                                                ...prev,
-                                                docTFMethod: (
-                                                    e.target as HTMLInputElement
-                                                ).value,
-                                            }))
-                                        }
                                     >
                                         {method}
                                     </SelectItem>
@@ -448,7 +448,27 @@ export function RetrievalForm({
 
             {/* IDF & Normalization */}
             <div className="space-y-2 mb-4">
-                <RadioGroup defaultValue="TF only">
+                <RadioGroup
+                    id="doc-method"
+                    defaultValue="TF only"
+                    onValueChange={(val) => {
+                        setFormData((prev) => ({
+                            ...prev,
+                            docTF: [
+                                "TF only",
+                                "TF x IDF",
+                                "TF x IDF x cosine normalization",
+                            ].includes(val),
+                            docIDF: [
+                                "IDF only",
+                                "TF x IDF",
+                                "TF x IDF x cosine normalization",
+                            ].includes(val),
+                            docNormalization:
+                                val === "TF x IDF x cosine normalization",
+                        }));
+                    }}
+                >
                     {[
                         "TF only",
                         "IDF only",
@@ -461,28 +481,8 @@ export function RetrievalForm({
                         >
                             <RadioGroupItem
                                 value={method}
-                                id={method}
+                                id={`doc-${method}`}
                                 className="cursor-pointer"
-                                onChange={(e) => {
-                                    const val = (e.target as HTMLInputElement)
-                                        .value;
-                                    setFormData((prev) => ({
-                                        ...prev,
-                                        docTF: [
-                                            "TF only",
-                                            "TF x IDF",
-                                            "TF x IDF x cosine normalization",
-                                        ].includes(val),
-                                        docIDF: [
-                                            "IDF only",
-                                            "TF x IDF",
-                                            "TF x IDF x cosine normalization",
-                                        ].includes(val),
-                                        docNormalization:
-                                            val ===
-                                            "TF x IDF x cosine normalization",
-                                    }));
-                                }}
                             />
                             <Label htmlFor={method}>{method}</Label>
                         </div>
@@ -498,14 +498,22 @@ export function RetrievalForm({
                 <Label className="text-base">Query Weighting Method</Label>
                 <div className="flex flex-row gap-2 content-center">
                     <Label
-                        htmlFor="tf-method"
+                        htmlFor="query-tf-method"
                         className="text-sm whitespace-nowrap"
                     >
                         TF Method
                     </Label>
-                    <Select defaultValue="logarithmic">
+                    <Select
+                        defaultValue="logarithmic"
+                        onValueChange={(value) =>
+                            setFormData((prev) => ({
+                                ...prev,
+                                queryTFMethod: value,
+                            }))
+                        }
+                    >
                         <SelectTrigger
-                            id="tf-method"
+                            id="query-tf-method"
                             className="w-full flex-grow bg-sidebar text-foreground cursor-pointer"
                         >
                             <SelectValue placeholder="Select a method" />
@@ -517,14 +525,6 @@ export function RetrievalForm({
                                         key={method}
                                         value={method}
                                         className="cursor-pointer"
-                                        onChange={(e) =>
-                                            setFormData((prev) => ({
-                                                ...prev,
-                                                queryTFMethod: (
-                                                    e.target as HTMLInputElement
-                                                ).value,
-                                            }))
-                                        }
                                     >
                                         {method}
                                     </SelectItem>
@@ -537,7 +537,28 @@ export function RetrievalForm({
 
             {/* IDF & Normalization */}
             <div className="space-y-2 mb-4">
-                <RadioGroup defaultValue="TF only">
+                <RadioGroup
+                    id="query-method"
+                    defaultValue="TF only"
+                    onChange={(e) => {
+                        const val = (e.target as HTMLInputElement).value;
+                        setFormData((prev) => ({
+                            ...prev,
+                            queryTF: [
+                                "TF only",
+                                "TF x IDF",
+                                "TF x IDF x cosine normalization",
+                            ].includes(val),
+                            queryIDF: [
+                                "IDF only",
+                                "TF x IDF",
+                                "TF x IDF x cosine normalization",
+                            ].includes(val),
+                            queryNormalization:
+                                val === "TF x IDF x cosine normalization",
+                        }));
+                    }}
+                >
                     {[
                         "TF only",
                         "IDF only",
@@ -550,28 +571,8 @@ export function RetrievalForm({
                         >
                             <RadioGroupItem
                                 value={method}
-                                id={method}
+                                id={`query-${method}`}
                                 className="cursor-pointer"
-                                onChange={(e) => {
-                                    const val = (e.target as HTMLInputElement)
-                                        .value;
-                                    setFormData((prev) => ({
-                                        ...prev,
-                                        queryTF: [
-                                            "TF only",
-                                            "TF x IDF",
-                                            "TF x IDF x cosine normalization",
-                                        ].includes(val),
-                                        queryIDF: [
-                                            "IDF only",
-                                            "TF x IDF",
-                                            "TF x IDF x cosine normalization",
-                                        ].includes(val),
-                                        queryNormalization:
-                                            val ===
-                                            "TF x IDF x cosine normalization",
-                                    }));
-                                }}
                             />
                             <Label htmlFor={method}>{method}</Label>
                         </div>
