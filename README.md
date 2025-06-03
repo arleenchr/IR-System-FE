@@ -1,13 +1,16 @@
 # Information Retrieval System – Front-end
 
-This is the frontend of an Information Retrieval (IR) system built for IF4042 Information Retrieval course. This project provides an interface for users to interactively run queries, view retrieval results, explore inverted files, and evaluate performance.
+This is the frontend of an Information Retrieval (IR) system built for IF4042 Information Retrieval course. This information retrieval system powered by Word2Vec for the query expansion.
+
+This project provides an interface for users to interactively run queries, view retrieval results, explore inverted files, and evaluate performance.
 
 ## 📸 Interface
+
 ![Information Retrieval Result for Interactive Query](https://github.com/arleenchr/IR-System-FE/blob/master/images/screenshot1.png)
 
 ![Information Retrieval Result for Batch Query](https://github.com/arleenchr/IR-System-FE/blob/master/images/screenshot2.png)
 
-___
+---
 
 ## 🚀 Getting Started
 
@@ -41,7 +44,8 @@ npm run dev
 ### 5. Accessing the web app
 
 Open http://localhost:3000 in your browser.
-___
+
+---
 
 ## 📦 Backend Repository
 
@@ -50,13 +54,13 @@ You can find the backend implementation here:<br>
 
 Make sure the backend is running at the URL specified in your .env file (VITE_BACKEND_URL).
 
-___
+---
 
 ## 📄 Documentation
 
 Technical documentation and user manual can be accessed through the full documentation here: [`doc/documentation.pdf`](https://github.com/arleenchr/IR-System-FE/blob/master/doc/documentation.pdf)
 
-___
+---
 
 ## 🛠️ Tech Stack
 
